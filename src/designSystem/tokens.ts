@@ -58,6 +58,7 @@ export const designTokens = {
     },
     colorSelection: {
       actionGap: "40px",
+      cardFlipDurationSeconds: 0.16,
       contentGap: "36px",
       contentTopGap: "34px",
       copyFontSize: "20px",

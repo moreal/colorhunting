@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:pages": "tsc -b && vite build --mode github-pages",
     "format": "oxfmt --write index.html package.json tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts \".storybook/**/*.{ts,tsx}\" \"src/**/*.{ts,tsx,css}\"",
     "format:check": "oxfmt --check index.html package.json tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts \".storybook/**/*.{ts,tsx}\" \"src/**/*.{ts,tsx,css}\"",
     "lint": "oxlint --deny-warnings --vitest-plugin .",

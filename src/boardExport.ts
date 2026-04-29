@@ -1,4 +1,9 @@
-import { BOARD_SLOT_COUNT, createImage, type BoardSlot, type Image as BoardImage } from "./appState";
+import {
+  BOARD_SLOT_COUNT,
+  createImage,
+  type BoardSlot,
+  type Image as BoardImage,
+} from "./appState";
 import { normalizeHexColor } from "./color";
 
 export const BOARD_EXPORT_WIDTH = 3024;
@@ -145,13 +150,11 @@ function drawBoardFrame(
   context.fillStyle = options.textColor;
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.font =
-    '700 124px "Press Start 2P", "NeoDunggeunmo Pro", ui-monospace, monospace';
+  context.font = '700 124px "Press Start 2P", "NeoDunggeunmo Pro", ui-monospace, monospace';
   context.fillText("COLOR*HUNTING", layout.width / 2, layout.headerHeight * 0.42);
 
   if (options.colorLabel) {
-    context.font =
-      '400 84px "NeoDunggeunmo Pro", "Press Start 2P", ui-monospace, monospace';
+    context.font = '400 84px "NeoDunggeunmo Pro", "Press Start 2P", ui-monospace, monospace';
     context.fillText(options.colorLabel, layout.width / 2, layout.headerHeight * 0.72);
   }
 }
@@ -176,12 +179,7 @@ function drawBoardSlots(
   }
 }
 
-function drawEmptySlot(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  size: number,
-) {
+function drawEmptySlot(context: CanvasRenderingContext2D, x: number, y: number, size: number) {
   const checkerSize = size / 12;
 
   context.fillStyle = "#ffffff";

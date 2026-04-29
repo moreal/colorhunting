@@ -131,7 +131,10 @@ export function ColorSelectionPage({
               className="color-selection-card-motion"
               exit={{ opacity: 0, rotateY: -90 }}
               initial={{ opacity: 0, rotateY: 90 }}
-              transition={{ duration: 0.26, ease: [0.2, 0, 0, 1] }}
+              transition={{
+                duration: designTokens.component.colorSelection.cardFlipDurationSeconds,
+                ease: [0.2, 0, 0, 1],
+              }}
             >
               <ColorCard color={selectedColor.color} title={selectedColor.label} />
             </motion.div>

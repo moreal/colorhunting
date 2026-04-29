@@ -14,6 +14,10 @@ run = "yarn dev"
 description = "Build the project"
 run = "yarn build"
 
+[tasks.build-pages]
+description = "Build the project for GitHub Pages"
+run = "yarn build:pages"
+
 [tasks.storybook]
 description = "Start Storybook"
 run = "yarn storybook"

@@ -208,6 +208,7 @@ describe("design system components", () => {
       swatchSize: "120.83px",
     });
     expect(designTokens.component.colorSelection).toMatchObject({
+      cardFlipDurationSeconds: 0.16,
       copyFontSize: "20px",
       logoHeight: "39px",
       logoWidth: "337px",
