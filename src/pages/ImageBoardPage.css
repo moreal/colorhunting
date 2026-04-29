@@ -1,18 +1,10 @@
 .image-board-page {
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  background: #f0f1f5;
   color: var(--image-board-theme-text-color);
-  padding: 24px;
 }
 
 .image-board-shell {
   display: grid;
-  width: min(100%, 354px);
-  min-height: min(760px, calc(100dvh - 48px));
-  grid-template-rows: 180px minmax(364px, 1fr) 116px;
-  overflow: hidden;
+  grid-template-rows: clamp(150px, 22dvh, 184px) auto minmax(116px, 1fr);
   background: #ffffff;
 }
 
@@ -127,30 +119,7 @@
   font-size: 12px;
 }
 
-.image-board-info-content {
-  display: grid;
-  gap: 18px;
-  font-family: var(--ds-font-family-display);
-  font-size: 15px;
-  line-height: 1.55;
-  letter-spacing: 0;
-}
-
-.image-board-info-content p {
-  margin: 0;
-}
-
 @media (max-width: 420px) {
-  .image-board-page {
-    padding: 0;
-  }
-
-  .image-board-shell {
-    width: 100%;
-    min-height: 100dvh;
-    grid-template-rows: minmax(144px, 22dvh) minmax(260px, 1fr) minmax(96px, 15dvh);
-  }
-
   .image-board-header {
     padding-inline: 22px;
   }

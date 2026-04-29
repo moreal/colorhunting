@@ -109,7 +109,17 @@ describe("ColorSelectionPage", () => {
     expect(screen.getByRole("button", { name: "Confirm" })).toBeEnabled();
   });
 
-  it("밝은 색상은 확정 버튼 글자를 검정색으로 보여준다", () => {
+  it("노란색만 확정 버튼 글자를 검정색으로 보여준다", () => {
+    const { unmount } = render(
+      <ColorSelectionPage
+        initialColor={redOption}
+        saveConfirmedState={vi.fn<() => Promise<void>>()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Confirm" })).toHaveStyle("color: #ffffff");
+
+    unmount();
     render(
       <ColorSelectionPage
         initialColor={yellowOption}
@@ -117,7 +127,7 @@ describe("ColorSelectionPage", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Confirm" })).toHaveStyle("color: #050608");
+    expect(screen.getByRole("button", { name: "Confirm" })).toHaveStyle("color: #000000");
   });
 
   it("정보 팝업은 열기 버튼에서 열리고 닫기 버튼과 Escape로 닫힌다", async () => {

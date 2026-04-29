@@ -4,7 +4,8 @@ import {
   type BoardSlot,
   type Image as BoardImage,
 } from "./appState";
-import { getReadableTextColor, normalizeHexColor } from "./color";
+import { normalizeHexColor } from "./color";
+import { getColorHuntingThemeTextColor } from "./colorHuntingTheme";
 
 export const BOARD_EXPORT_WIDTH = 3024;
 export const BOARD_EXPORT_HEIGHT = 4032;
@@ -52,7 +53,7 @@ export async function composeBoardImage(
   const layout = createBoardExportLayout(options);
   const themeColor = getThemeColor(options.color);
   const backgroundColor = getBackgroundColor(options.backgroundColor);
-  const textColor = getReadableTextColor(themeColor);
+  const textColor = getColorHuntingThemeTextColor(themeColor);
   const canvas = (options.createCanvas ?? createBrowserCanvas)(layout.width, layout.height);
   const context = canvas.getContext("2d");
 

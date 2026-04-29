@@ -29,6 +29,7 @@ describe("ImageBoardPage", () => {
 
     const board = screen.getByRole("group", { name: "Image board, 0 of 9 slots filled" });
 
+    expect(board).toHaveAttribute("data-variant", "poster");
     expect(within(board).getAllByRole("group")).toHaveLength(9);
     expect(screen.getByRole("heading", { name: "RED" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeDisabled();
@@ -249,8 +250,12 @@ describe("ImageBoardPage", () => {
     expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeEnabled();
   });
 
-  it("밝은 노란색 테마는 화면 설계서처럼 검정 텍스트를 사용한다", () => {
-    render(
+  it("색상명은 노란색만 검정 텍스트를 사용한다", () => {
+    const { rerender } = render(<ImageBoardPage state={createBoardState()} />);
+
+    expect(screen.getByRole("main")).toHaveStyle("--image-board-theme-text-color: #ffffff");
+
+    rerender(
       <ImageBoardPage
         state={createBoardState({
           color: designTokens.color.colorCard.yellow,
@@ -259,7 +264,23 @@ describe("ImageBoardPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "YELLOW" })).toBeInTheDocument();
-    expect(screen.getByRole("main")).toHaveStyle("--image-board-theme-text-color: #050608");
+    expect(screen.getByRole("main")).toHaveStyle("--image-board-theme-text-color: #000000");
+  });
+
+  it("정보 팝업은 열기 버튼에서 열린다", async () => {
+    const user = userEvent.setup();
+    render(
+      <ImageBoardPage
+        state={createBoardState({
+          color: designTokens.color.colorCard.blue,
+        })}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "컬러헌팅 정보 열기" }));
+
+    expect(screen.getByRole("dialog", { name: "컬러헌팅(Color Hunting)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "컬러헌팅 정보 닫기" })).toHaveFocus();
   });
 });
 

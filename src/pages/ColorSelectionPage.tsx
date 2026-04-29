@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { createColor, selectColor, type Color, type ColorDeterminedAppState } from "../appState";
-import { getReadableTextColor } from "../color";
-import { ColorCard, ConfirmButton, InfoButton, InfoPopup, Logo, ResetButton } from "../components";
+import { getColorHuntingThemeTextColor } from "../colorHuntingTheme";
+import { ColorCard, ConfirmButton, InfoButton, Logo, ResetButton } from "../components";
 import { designTokens } from "../designSystem/tokens";
+import { ColorHuntingInfoPopup } from "./ColorHuntingInfoPopup";
 import "../designSystem/styles.css";
 import "./ColorSelectionPage.css";
 
@@ -50,7 +51,7 @@ export function ColorSelectionPage({
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const confirmTextColor = useMemo(
-    () => getReadableTextColor(selectedColor.color.hex),
+    () => getColorHuntingThemeTextColor(selectedColor.color.hex),
     [selectedColor.color.hex],
   );
   const confirmButtonStyle = useMemo<CSSProperties>(
@@ -102,10 +103,10 @@ export function ColorSelectionPage({
   return (
     <main
       aria-labelledby="color-selection-title"
-      className="color-selection-page"
+      className="ds-mobile-app-page color-selection-page"
       style={pageStyle}
     >
-      <section className="color-selection-panel">
+      <section className="ds-mobile-app-frame color-selection-panel">
         <header className="color-selection-header">
           <Logo className="color-selection-logo" />
           <InfoButton
@@ -163,30 +164,7 @@ export function ColorSelectionPage({
         </div>
       </section>
 
-      <InfoPopup
-        closeLabel="컬러헌팅 정보 닫기"
-        onClose={() => setIsInfoOpen(false)}
-        open={isInfoOpen}
-        title="컬러헌팅(Color Hunting)"
-      >
-        <div className="color-selection-info-content">
-          <p>
-            특정한 색상을 정해 일상이나 자연 속에서 보물찾기하듯 찾고, 사진으로 기록하며 주변 환경을
-            새롭게 관찰하는 활동입니다.
-          </p>
-          <p>사진은 외부로 업로드되지 않고 사용 중인 기기 안에서만 저장됩니다. 삭제하지 마세요!</p>
-          <dl className="color-selection-credits">
-            <div>
-              <dt>Design by</dt>
-              <dd>SOYOUNG</dd>
-            </div>
-            <div>
-              <dt>Developed by</dt>
-              <dd>@moreal</dd>
-            </div>
-          </dl>
-        </div>
-      </InfoPopup>
+      <ColorHuntingInfoPopup onClose={() => setIsInfoOpen(false)} open={isInfoOpen} />
     </main>
   );
 }

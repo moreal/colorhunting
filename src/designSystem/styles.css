@@ -43,6 +43,10 @@
   --ds-color-card-glow-size: 174px;
   --ds-color-card-glow-opacity: 0.5;
   --ds-color-card-glow-blur: 60px;
+  --ds-mobile-app-frame-width: 390px;
+  --ds-mobile-app-frame-min-height: 844px;
+  --ds-mobile-app-page-padding: 24px;
+  --ds-mobile-app-page-padding-compact: 16px;
   --ds-pixel-corner-depth: 2px;
   --ds-action-button-corner-size: var(--ds-pixel-corner-depth);
   --ds-radius-small: 4px;
@@ -75,6 +79,23 @@
   clip: rect(0 0 0 0);
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+.ds-mobile-app-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  background: #f0f1f5;
+  padding: var(--ds-mobile-app-page-padding);
+}
+
+.ds-mobile-app-frame {
+  width: min(100%, var(--ds-mobile-app-frame-width));
+  min-height: min(
+    var(--ds-mobile-app-frame-min-height),
+    calc(100dvh - var(--ds-mobile-app-page-padding) - var(--ds-mobile-app-page-padding))
+  );
+  overflow: hidden;
 }
 
 .ds-logo:focus-visible,
@@ -601,6 +622,7 @@
 }
 
 .ds-image-board[data-variant="poster"] .ds-image-slot {
+  aspect-ratio: 3 / 4;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -713,6 +735,19 @@
 
   .ds-image-slot-name {
     display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .ds-mobile-app-page {
+    align-items: start;
+    padding: var(--ds-mobile-app-page-padding-compact);
+  }
+
+  .ds-mobile-app-frame {
+    min-height: calc(
+      100dvh - var(--ds-mobile-app-page-padding-compact) - var(--ds-mobile-app-page-padding-compact)
+    );
   }
 }
 

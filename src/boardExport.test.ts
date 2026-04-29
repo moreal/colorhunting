@@ -97,6 +97,37 @@ describe("boardExport", () => {
     expect(waitForFonts).toHaveBeenCalledOnce();
   });
 
+  it("내보낸 보드의 테마 텍스트는 노란색만 검정색으로 그린다", async () => {
+    const redExport = createFakeCanvas();
+    const yellowExport = createFakeCanvas();
+    const options = {
+      loadImage: vi.fn<() => Promise<CanvasImageSource>>(
+        async () => ({ height: 100, width: 100 }) as CanvasImageSource,
+      ),
+      waitForFonts: vi.fn<() => Promise<void>>(async () => {}),
+    };
+
+    await composeBoardImage(createBoard([[0, createSampleImage(1)]]), {
+      ...options,
+      color: "#ef4b4b",
+      colorLabel: "RED",
+      createCanvas: redExport.createCanvas,
+    });
+    await composeBoardImage(createBoard([[0, createSampleImage(1)]]), {
+      ...options,
+      color: "#ffe44b",
+      colorLabel: "YELLOW",
+      createCanvas: yellowExport.createCanvas,
+    });
+
+    expect(redExport.textDraws.find((draw) => draw.text === "RED")).toMatchObject({
+      fillStyle: "#ffffff",
+    });
+    expect(yellowExport.textDraws.find((draw) => draw.text === "YELLOW")).toMatchObject({
+      fillStyle: "#000000",
+    });
+  });
+
   it("빈 보드는 다운로드 이미지로 만들지 않는다", async () => {
     await expect(composeBoardImage(createEmptyBoard())).rejects.toThrow(
       "Cannot export an empty image board.",
@@ -164,10 +195,23 @@ describe("boardExport", () => {
 });
 
 function createFakeCanvas() {
+  const textDraws: Array<{
+    fillStyle: string;
+    text: string;
+  }> = [];
+  let fillStyle = "";
   const context = {
     drawImage: vi.fn<(...args: unknown[]) => void>(),
     fillRect: vi.fn<(...args: unknown[]) => void>(),
-    fillText: vi.fn<(...args: unknown[]) => void>(),
+    fillText: vi.fn<(text: string) => void>((text) => {
+      textDraws.push({ fillStyle, text });
+    }),
+    get fillStyle() {
+      return fillStyle;
+    },
+    set fillStyle(value: string | CanvasGradient | CanvasPattern) {
+      fillStyle = String(value);
+    },
     restore: vi.fn<() => void>(),
     save: vi.fn<() => void>(),
     strokeRect: vi.fn<(...args: unknown[]) => void>(),
@@ -189,7 +233,7 @@ function createFakeCanvas() {
     },
   );
 
-  return { canvas, context, createCanvas };
+  return { canvas, context, createCanvas, textDraws };
 }
 
 function createBoard(entries: Array<[number, Image]> = []): Board {

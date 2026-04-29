@@ -21,12 +21,13 @@ import {
   DownloadBottomSheet,
   ImageBoard,
   InfoButton,
-  InfoPopup,
   Logo,
   type DownloadBottomSheetState,
 } from "../components";
-import { getReadableTextColor, normalizeHexColor } from "../color";
+import { normalizeHexColor } from "../color";
+import { getColorHuntingThemeTextColor } from "../colorHuntingTheme";
 import { designTokens } from "../designSystem/tokens";
+import { ColorHuntingInfoPopup } from "./ColorHuntingInfoPopup";
 import "../designSystem/styles.css";
 import "./ImageBoardPage.css";
 
@@ -80,7 +81,8 @@ export function ImageBoardPage({
     [currentState?.color.hex],
   );
   const themeTextColor = useMemo(
-    () => getReadableTextColor(currentState?.color.hex ?? designTokens.color.colorCard.red),
+    () =>
+      getColorHuntingThemeTextColor(currentState?.color.hex ?? designTokens.color.colorCard.red),
     [currentState?.color.hex],
   );
   const pageStyle = useMemo(
@@ -198,8 +200,12 @@ export function ImageBoardPage({
   }
 
   return (
-    <main aria-labelledby="image-board-title" className="image-board-page" style={pageStyle}>
-      <section className="image-board-shell">
+    <main
+      aria-labelledby="image-board-title"
+      className="ds-mobile-app-page image-board-page"
+      style={pageStyle}
+    >
+      <section className="ds-mobile-app-frame image-board-shell">
         <header className="image-board-header">
           <Logo
             aria-label="Reset board and choose a new color"
@@ -254,20 +260,7 @@ export function ImageBoardPage({
         </footer>
       </section>
 
-      <InfoPopup
-        closeLabel="컬러헌팅 정보 닫기"
-        onClose={() => setIsInfoOpen(false)}
-        open={isInfoOpen}
-        title="컬러헌팅(Color Hunting)"
-      >
-        <div className="image-board-info-content">
-          <p>
-            특정한 색상을 정해 일상이나 자연 속에서 보물찾기하듯 찾고, 사진으로 기록하며 주변 환경을
-            새롭게 관찰하는 활동입니다.
-          </p>
-          <p>사진은 외부로 업로드되지 않고 사용 중인 기기 안에서만 저장됩니다. 삭제하지 마세요!</p>
-        </div>
-      </InfoPopup>
+      <ColorHuntingInfoPopup onClose={() => setIsInfoOpen(false)} open={isInfoOpen} />
     </main>
   );
 }
