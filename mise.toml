@@ -14,6 +14,14 @@ run = "yarn dev"
 description = "Build the project"
 run = "yarn build"
 
+[tasks.storybook]
+description = "Start Storybook"
+run = "yarn storybook"
+
+[tasks.storybook-build]
+description = "Build Storybook"
+run = "yarn storybook:build"
+
 [tasks.test]
 description = "Run tests"
 run = "yarn test"

@@ -4,10 +4,10 @@ Plan 03: Design System and Storybook
 Status
 ------
 
- -  State: Not started
+ -  State: Done
  -  Owner: Main implementation agent
  -  Depends on: [Plan 01](./01-react-migration.md)
- -  Resume from: Start at “Storybook setup”
+ -  Resume from: Completed
  -  Commit message: `Build Storybook design system components`
 
 
@@ -51,32 +51,32 @@ Build these components before page composition:
 Tasks
 -----
 
- -  [ ] Storybook setup
+ -  [x] Storybook setup
      -  Add Storybook for React and Vite.
      -  Add `mise` tasks for Storybook development and Storybook build if needed.
      -  Keep Storybook configuration minimal and local to this repository.
- -  [ ] Design tokens
+ -  [x] Design tokens
      -  Define the first token layer for color, spacing, type, radius, and motion
         timing.
      -  Keep tokens in code so tests and components can share them.
      -  Avoid hardcoding Figma layer names into public APIs.
- -  [ ] Component implementation
+ -  [x] Component implementation
      -  Implement semantic HTML and keyboard-friendly controls.
      -  Add visible disabled, focus, hover, active, loading, and completed states
         where relevant.
      -  Use Motion only where state transitions benefit from it.
      -  Keep components controlled by props.
- -  [ ] Storybook stories
+ -  [x] Storybook stories
      -  Add stories for every meaningful state.
      -  Include `DownloadButton` states: enabled, completed, disabled.
      -  Include `ImageBoard` states: empty, partially filled, full.
      -  Include `InfoPopup` open and closed states.
- -  [ ] Automated tests
+ -  [x] Automated tests
      -  Test accessible names, roles, disabled states, keyboard behavior, and visible
         state labels.
      -  Add interaction tests where component state transitions are meaningful.
      -  Use Korean test titles.
- -  [ ] Verification
+ -  [x] Verification
      -  Run `mise run test`.
      -  Run `mise run lint`.
      -  Run Storybook build through a `mise` task if that task exists by then.

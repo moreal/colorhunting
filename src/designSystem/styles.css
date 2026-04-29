@@ -1,0 +1,377 @@
+:root {
+  --ds-color-canvas: #f5f7f1;
+  --ds-color-surface: #ffffff;
+  --ds-color-panel: #16212b;
+  --ds-color-panel-muted: #263642;
+  --ds-color-text: #172033;
+  --ds-color-muted-text: #5f6f7e;
+  --ds-color-inverted-text: #f8fbf7;
+  --ds-color-border: #d5dde2;
+  --ds-color-border-strong: #9ba8b2;
+  --ds-color-primary: #0f766e;
+  --ds-color-primary-hover: #0b5f59;
+  --ds-color-primary-text: #ffffff;
+  --ds-color-danger: #b4233a;
+  --ds-color-danger-hover: #931a2d;
+  --ds-color-success: #2d7f5e;
+  --ds-color-warning: #9a6b15;
+  --ds-color-disabled-surface: #e8edf0;
+  --ds-color-disabled-text: #778492;
+  --ds-color-focus: #2563eb;
+  --ds-color-slot-background: #eef3ef;
+  --ds-radius-small: 4px;
+  --ds-radius-medium: 8px;
+  --ds-radius-round: 999px;
+  --ds-motion-fast: 120ms;
+  --ds-motion-normal: 180ms;
+  --ds-motion-easing: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.ds-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ds-color-text);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.ds-logo-mark {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--ds-color-border-strong);
+  border-radius: var(--ds-radius-medium);
+  background: var(--ds-color-panel);
+  color: var(--ds-color-inverted-text);
+  font-size: 0.75rem;
+  letter-spacing: 0;
+}
+
+.ds-logo:focus-visible,
+.ds-icon-button:focus-visible,
+.ds-text-button:focus-visible,
+.ds-image-slot-input:focus-visible + .ds-image-slot-empty,
+.ds-dialog-surface:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--ds-color-focus) 32%, transparent);
+  outline-offset: 3px;
+}
+
+.ds-icon-button,
+.ds-text-button {
+  border: 1px solid var(--ds-color-border);
+  border-radius: var(--ds-radius-medium);
+  background: var(--ds-color-surface);
+  color: var(--ds-color-text);
+  cursor: pointer;
+  transition:
+    background-color var(--ds-motion-fast) var(--ds-motion-easing),
+    border-color var(--ds-motion-fast) var(--ds-motion-easing),
+    color var(--ds-motion-fast) var(--ds-motion-easing),
+    transform var(--ds-motion-fast) var(--ds-motion-easing);
+}
+
+.ds-icon-button:hover:not(:disabled),
+.ds-text-button:hover:not(:disabled) {
+  border-color: var(--ds-color-border-strong);
+  background: #f7faf8;
+}
+
+.ds-icon-button:active:not(:disabled),
+.ds-text-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.ds-icon-button:disabled,
+.ds-text-button:disabled {
+  border-color: transparent;
+  background: var(--ds-color-disabled-surface);
+  color: var(--ds-color-disabled-text);
+  cursor: not-allowed;
+}
+
+.ds-icon-button {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  padding: 0;
+  font-weight: 800;
+}
+
+.ds-text-button {
+  min-height: 40px;
+  padding: 0 14px;
+  font-weight: 800;
+}
+
+.ds-text-button[data-variant="primary"] {
+  border-color: var(--ds-color-primary);
+  background: var(--ds-color-primary);
+  color: var(--ds-color-primary-text);
+}
+
+.ds-text-button[data-variant="primary"]:hover:not(:disabled) {
+  border-color: var(--ds-color-primary-hover);
+  background: var(--ds-color-primary-hover);
+}
+
+.ds-text-button[data-variant="danger"] {
+  border-color: color-mix(in srgb, var(--ds-color-danger) 28%, var(--ds-color-border));
+  color: var(--ds-color-danger);
+}
+
+.ds-text-button[data-variant="danger"]:hover:not(:disabled) {
+  border-color: var(--ds-color-danger);
+  background: #fff4f5;
+  color: var(--ds-color-danger-hover);
+}
+
+.ds-download-button[data-status="completed"] {
+  border-color: var(--ds-color-success);
+  background: color-mix(in srgb, var(--ds-color-success) 12%, var(--ds-color-surface));
+  color: var(--ds-color-success);
+}
+
+.ds-download-button[aria-busy="true"] {
+  cursor: wait;
+}
+
+.ds-color-card {
+  display: grid;
+  grid-template-columns: minmax(96px, 34%) minmax(0, 1fr);
+  width: min(100%, 520px);
+  min-height: 184px;
+  overflow: hidden;
+  border: 1px solid var(--ds-color-border);
+  border-radius: var(--ds-radius-medium);
+  background: var(--ds-color-surface);
+}
+
+.ds-color-card-preview {
+  min-height: 184px;
+}
+
+.ds-color-card-body {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 20px;
+}
+
+.ds-color-card-title {
+  margin: 0;
+  color: var(--ds-color-muted-text);
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.ds-color-card-code {
+  color: var(--ds-color-text);
+  font:
+    1.5rem/1.2 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    "Courier New",
+    monospace;
+  overflow-wrap: anywhere;
+}
+
+.ds-color-card-description {
+  margin: 0;
+  color: var(--ds-color-muted-text);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.ds-status-label {
+  width: fit-content;
+  border-radius: var(--ds-radius-round);
+  background: #e8f4ef;
+  color: var(--ds-color-success);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 4px 8px;
+}
+
+.ds-color-card[data-status="loading"] .ds-status-label {
+  background: #fff7e3;
+  color: var(--ds-color-warning);
+}
+
+.ds-image-board {
+  display: grid;
+  width: min(100%, 640px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ds-image-slot {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--ds-color-border);
+  border-radius: var(--ds-radius-medium);
+  background: var(--ds-color-slot-background);
+}
+
+.ds-image-slot-empty {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 12px;
+  color: var(--ds-color-muted-text);
+  cursor: pointer;
+  text-align: center;
+}
+
+.ds-image-slot-empty strong {
+  color: var(--ds-color-text);
+  font-size: 0.95rem;
+}
+
+.ds-image-slot-empty span {
+  font-size: 0.8rem;
+}
+
+.ds-image-slot-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+}
+
+.ds-image-slot-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ds-image-slot-overlay {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: var(--ds-radius-medium);
+  background: color-mix(in srgb, var(--ds-color-panel) 82%, transparent);
+  color: var(--ds-color-inverted-text);
+  padding: 8px;
+}
+
+.ds-image-slot-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-image-slot-overlay .ds-text-button {
+  min-height: 32px;
+  border-color: transparent;
+  background: #ffffff;
+  color: var(--ds-color-danger);
+  padding: 0 10px;
+}
+
+.ds-bottom-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.ds-bottom-action-bar[data-align="end"] {
+  justify-content: flex-end;
+}
+
+.ds-bottom-action-bar[data-align="space-between"] {
+  justify-content: space-between;
+}
+
+.ds-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, #091018 58%, transparent);
+  padding: 18px;
+}
+
+.ds-dialog-surface {
+  display: grid;
+  gap: 18px;
+  width: min(100%, 440px);
+  max-height: min(620px, calc(100vh - 36px));
+  overflow: auto;
+  border: 1px solid var(--ds-color-border);
+  border-radius: var(--ds-radius-medium);
+  background: var(--ds-color-surface);
+  color: var(--ds-color-text);
+  padding: 20px;
+}
+
+.ds-dialog-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ds-dialog-title {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.35;
+}
+
+.ds-dialog-content {
+  color: var(--ds-color-muted-text);
+  line-height: 1.6;
+}
+
+.ds-dialog-content p {
+  margin: 0;
+}
+
+@media (max-width: 520px) {
+  .ds-color-card {
+    grid-template-columns: 1fr;
+  }
+
+  .ds-color-card-preview {
+    min-height: 128px;
+  }
+
+  .ds-image-board {
+    gap: 8px;
+  }
+
+  .ds-image-slot-overlay {
+    right: 6px;
+    bottom: 6px;
+    left: 6px;
+    padding: 6px;
+  }
+
+  .ds-image-slot-name {
+    display: none;
+  }
+}
