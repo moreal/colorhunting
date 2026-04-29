@@ -1,0 +1,31 @@
+[tools]
+yarn = "4.14.1"
+node = "24"
+
+[tasks.install]
+description = "Install JavaScript dependencies"
+run = "yarn install --immutable"
+
+[tasks.dev]
+description = "Start the development server"
+run = "yarn dev"
+
+[tasks.build]
+description = "Build the project"
+run = "yarn build"
+
+[tasks.test]
+description = "Run tests"
+run = "yarn test"
+
+[tasks.lint]
+description = "Run lint checks"
+run = "yarn lint"
+
+[tasks.format]
+description = "Format source files with oxfmt"
+run = "yarn format"
+
+[tasks.format-check]
+description = "Check source formatting with oxfmt"
+run = "yarn format:check"
