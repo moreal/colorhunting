@@ -1,7 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { designTokens } from "../designSystem/tokens";
 import { ColorCard } from "./ColorCard";
 
 const meta = {
+  argTypes: {
+    color: {
+      control: false,
+    },
+  },
   component: ColorCard,
   parameters: {
     layout: "centered",
@@ -13,26 +19,64 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Available: Story = {
+const colorCardTokens = designTokens.color.colorCard;
+
+const colorList = [
+  { color: { hex: colorCardTokens.red }, title: "RED" },
+  { color: { hex: colorCardTokens.orange }, title: "ORANGE" },
+  { color: { hex: colorCardTokens.yellow }, title: "YELLOW" },
+  { color: { hex: colorCardTokens.green }, title: "GREEN" },
+  { color: { hex: colorCardTokens.blue }, title: "BLUE" },
+  { color: { hex: colorCardTokens.navy }, title: "NAVY" },
+  { color: { hex: colorCardTokens.purple }, title: "PURPLE" },
+  { color: { hex: colorCardTokens.pink }, title: "PINK" },
+];
+
+export const Green: Story = {
   args: {
-    color: { hex: "#0f766e" },
-    description: "A ready color can be confirmed or reset by the page.",
-    status: "available",
+    color: { hex: colorCardTokens.green },
+    title: "GREEN",
   },
 };
 
-export const Selected: Story = {
+export const Red: Story = {
   args: {
-    color: { hex: "#b4233a" },
-    description: "The selected state is used after the user confirms a color.",
-    status: "selected",
+    color: { hex: colorCardTokens.red },
+    title: "RED",
   },
 };
 
-export const Loading: Story = {
+export const Pink: Story = {
   args: {
-    color: { hex: "#9a6b15" },
-    description: "The loading state keeps the card stable while the page chooses a new color.",
-    status: "loading",
+    color: { hex: colorCardTokens.pink },
+    title: "PINK",
   },
+};
+
+export const ColorList: Story = {
+  args: {
+    color: { hex: colorCardTokens.green },
+    title: "GREEN",
+  },
+  parameters: {
+    layout: "fullscreen",
+  },
+  render: () => (
+    <div
+      style={{
+        alignItems: "center",
+        background: "#292a2c",
+        boxSizing: "border-box",
+        display: "flex",
+        gap: "64px",
+        minHeight: "100vh",
+        overflowX: "auto",
+        padding: "72px 88px",
+      }}
+    >
+      {colorList.map((item) => (
+        <ColorCard color={item.color} key={`${item.title}-${item.color.hex}`} title={item.title} />
+      ))}
+    </div>
+  ),
 };

@@ -3,15 +3,18 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Image } from "../appState";
+import { designTokens } from "../designSystem/tokens";
 import { BottomActionBar } from "./BottomActionBar";
 import { CloseButton } from "./CloseButton";
 import { ColorCard } from "./ColorCard";
+import { DownloadBottomSheet } from "./DownloadBottomSheet";
 import { DownloadButton } from "./DownloadButton";
 import { ImageBoard } from "./ImageBoard";
 import { ImageSlot } from "./ImageSlot";
 import { InfoButton } from "./InfoButton";
 import { InfoPopup } from "./InfoPopup";
 import { Logo } from "./Logo";
+import { RemoveButton } from "./RemoveButton";
 
 describe("design system components", () => {
   afterEach(() => {
@@ -43,32 +46,162 @@ describe("design system components", () => {
     expect(screen.getByRole("button", { name: "Close popup" })).toBeInTheDocument();
   });
 
+  it("다운로드 버튼은 활성 상태에서 다운로드 실행을 알린다", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn<() => void>();
+    render(<DownloadButton onClick={onClick} />);
+
+    const button = screen.getByRole("button", { name: "DOWNLOAD" });
+    const icon = button.querySelector(".ds-download-button-icon");
+
+    expect(button).toHaveAttribute("data-state", "enabled");
+    expect(button).not.toBeDisabled();
+    expect(icon).toHaveAttribute("width", "12");
+    expect(icon).toHaveAttribute("height", "14");
+    await user.click(button);
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
   it("다운로드 버튼은 비활성 상태에서 실행되지 않는다", async () => {
     const user = userEvent.setup();
     const onClick = vi.fn<() => void>();
     render(<DownloadButton disabled onClick={onClick} />);
 
-    const button = screen.getByRole("button", { name: "Download unavailable" });
+    const button = screen.getByRole("button", { name: "DOWNLOAD" });
 
+    expect(button).toHaveAttribute("data-state", "disabled");
     expect(button).toBeDisabled();
     await user.click(button);
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it("다운로드 버튼은 완료 상태를 이름과 상태 속성으로 보여준다", () => {
-    render(<DownloadButton status="completed" />);
+  it("다운로드 버튼은 준비 중 상태에서 바쁜 상태를 알리고 실행되지 않는다", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn<() => void>();
+    render(<DownloadButton onClick={onClick} status="loading" />);
 
-    expect(screen.getByRole("button", { name: "Downloaded" })).toHaveAttribute(
-      "data-status",
-      "completed",
+    const button = screen.getByRole("button", { name: "Preparing download" });
+
+    expect(button).toHaveAttribute("aria-busy", "true");
+    expect(button).toBeDisabled();
+    await user.click(button);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("다운로드 바텀시트는 이미지가 부족하면 버튼을 막고 빈 상태 메시지를 보여준다", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn<() => void>();
+    render(<DownloadBottomSheet buttonProps={{ onClick }} state="NON_ENOUGH_IMAGES" />);
+
+    const button = screen.getByRole("button", { name: "DOWNLOAD" });
+
+    expect(button).toBeDisabled();
+    expect(screen.getByText("아직 비어있어요...")).toBeVisible();
+    await user.click(button);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("다운로드 바텀시트는 이미지가 충분하면 버튼만 활성화하고 클릭을 전달한다", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn<() => void>();
+    render(<DownloadBottomSheet buttonProps={{ onClick }} state="ENOUGH_IMAGES" />);
+
+    const button = screen.getByRole("button", { name: "DOWNLOAD" });
+
+    expect(button).toHaveAttribute("data-state", "enabled");
+    expect(screen.queryByText("아직 비어있어요...")).not.toBeInTheDocument();
+    expect(screen.queryByText("다운로드 완료했어요!")).not.toBeInTheDocument();
+    await user.click(button);
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("다운로드 바텀시트는 완료 후 성공 메시지를 보여준다", () => {
+    render(<DownloadBottomSheet state="DOWNLOAD_COMPLETED" />);
+
+    expect(screen.getByRole("button", { name: "DOWNLOAD" })).not.toBeDisabled();
+    expect(screen.getByText("다운로드 완료했어요!")).toBeVisible();
+  });
+
+  it("삭제 버튼은 기본 상태와 드래그 오버 상태를 구분한다", () => {
+    render(
+      <>
+        <RemoveButton label="Remove first image" />
+        <RemoveButton label="Remove hovered image" pressed />
+      </>,
+    );
+
+    expect(screen.getByRole("button", { name: "Remove first image" })).toHaveAttribute(
+      "data-state",
+      "enabled",
+    );
+    expect(
+      screen.getByRole("button", { name: "Remove first image" }).querySelector("svg"),
+    ).toHaveAttribute("width", "20");
+    expect(
+      screen.getByRole("button", { name: "Remove first image" }).querySelector("svg"),
+    ).toHaveAttribute("height", "24");
+    expect(screen.getByRole("button", { name: "Remove hovered image" })).toHaveAttribute(
+      "data-state",
+      "pressed",
     );
   });
 
-  it("색상 카드는 현재 색상과 선택 상태를 표시한다", () => {
-    render(<ColorCard color={{ hex: "#0f766e" }} status="selected" />);
+  it("삭제 버튼은 비활성 상태가 드래그 오버보다 우선하고 실행되지 않는다", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn<() => void>();
+    render(<RemoveButton disabled label="Remove disabled image" onClick={onClick} pressed />);
 
-    expect(screen.getByRole("article", { name: "Theme color #0f766e" })).toBeInTheDocument();
-    expect(screen.getByText("Selected")).toBeInTheDocument();
+    const button = screen.getByRole("button", { name: "Remove disabled image" });
+
+    expect(button).toHaveAttribute("data-state", "disabled");
+    expect(button).toBeDisabled();
+    await user.click(button);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("디자인 토큰은 컬러 카드 팔레트와 픽셀 표시 폰트를 제공한다", () => {
+    expect(designTokens.font.display).toContain("NeoDunggeunmo Pro");
+    expect(designTokens.font.pixel).toContain("Press Start 2P");
+    expect(designTokens.component.colorCard).toEqual({
+      glowBlur: "60px",
+      glowOpacity: "0.5",
+      glowSize: "174px",
+      labelFontSize: "18px",
+      maxHeight: "174px",
+      maxWidth: "146.61px",
+      swatchSize: "120.83px",
+    });
+    expect(designTokens.color.colorCard).toEqual({
+      blue: "#76D1FF",
+      green: "#34C759",
+      navy: "#000080",
+      orange: "#FE931B",
+      pink: "#FEB9DE",
+      purple: "#AE7BFF",
+      red: "#EF4B4B",
+      yellow: "#FFE44B",
+    });
+  });
+
+  it("색상 카드는 색상 라벨과 색상 값을 접근 가능한 이름으로 제공한다", () => {
+    render(<ColorCard color={{ hex: designTokens.color.colorCard.green }} title="GREEN" />);
+
+    const card = screen.getByRole("article", { name: "GREEN #34C759" });
+
+    expect(card).not.toHaveAttribute("data-status");
+    expect(card).not.toHaveAttribute("aria-busy");
+    expect(screen.getByText("GREEN")).toBeVisible();
+  });
+
+  it("색상 카드의 glow 레이어는 카드 article 밖에서 분리된다", () => {
+    render(<ColorCard color={{ hex: designTokens.color.colorCard.red }} title="RED" />);
+
+    const card = screen.getByRole("article", { name: "RED #EF4B4B" });
+    const root = card.parentElement;
+
+    expect(root).toHaveClass("ds-color-card-root");
+    expect(root?.querySelector(".ds-color-card-glow")).toHaveAttribute("aria-hidden", "true");
+    expect(card.querySelector(".ds-color-card-glow")).not.toBeInTheDocument();
   });
 
   it("빈 이미지 슬롯은 슬롯 번호가 포함된 파일 입력을 제공한다", () => {

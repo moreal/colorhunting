@@ -30,6 +30,6 @@ export const SpaceBetween: Story = {
 export const EndAligned: Story = {
   args: {
     align: "end",
-    children: <DownloadButton status="completed" />,
+    children: <DownloadButton />,
   },
 };

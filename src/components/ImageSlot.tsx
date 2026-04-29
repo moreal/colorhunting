@@ -56,6 +56,7 @@ export function ImageSlot({
             disabled={disabled}
             label={`Remove image from slot ${slotNumber}`}
             onClick={() => onRemoveImage?.(slotIndex)}
+            size="compact"
           />
         </div>
       </motion.div>

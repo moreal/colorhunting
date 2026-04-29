@@ -1,3 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+@import url("//cdn.jsdelivr.net/gh/neodgm/neodgm-pro-webfont@1.020/neodgm_pro/style.css");
+
 :root {
   --ds-color-canvas: #f5f7f1;
   --ds-color-surface: #ffffff;
@@ -19,6 +22,27 @@
   --ds-color-disabled-text: #778492;
   --ds-color-focus: #2563eb;
   --ds-color-slot-background: #eef3ef;
+  --ds-color-card-pink: #feb9de;
+  --ds-color-card-purple: #ae7bff;
+  --ds-color-card-navy: #000080;
+  --ds-color-card-blue: #76d1ff;
+  --ds-color-card-green: #34c759;
+  --ds-color-card-yellow: #ffe44b;
+  --ds-color-card-orange: #fe931b;
+  --ds-color-card-red: #ef4b4b;
+  --ds-font-family-display:
+    "NeoDunggeunmo Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    monospace;
+  --ds-font-family-pixel:
+    "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    monospace;
+  --ds-color-card-max-width: 146.61px;
+  --ds-color-card-max-height: 174px;
+  --ds-color-card-swatch-size: 120.83px;
+  --ds-color-card-label-font-size: 18px;
+  --ds-color-card-glow-size: 174px;
+  --ds-color-card-glow-opacity: 0.5;
+  --ds-color-card-glow-blur: 60px;
   --ds-radius-small: 4px;
   --ds-radius-medium: 8px;
   --ds-radius-round: 999px;
@@ -52,10 +76,39 @@
 .ds-logo:focus-visible,
 .ds-icon-button:focus-visible,
 .ds-text-button:focus-visible,
+.ds-download-button:focus-visible,
+.ds-remove-button:focus-visible,
 .ds-image-slot-input:focus-visible + .ds-image-slot-empty,
 .ds-dialog-surface:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--ds-color-focus) 32%, transparent);
+  outline: 3px solid var(--ds-color-focus);
   outline-offset: 3px;
+}
+
+.ds-pixel-corner {
+  --ds-pixel-corner-step: 6px;
+  border-radius: 0;
+  clip-path: polygon(
+    0 calc(var(--ds-pixel-corner-step) * 2),
+    var(--ds-pixel-corner-step) calc(var(--ds-pixel-corner-step) * 2),
+    var(--ds-pixel-corner-step) var(--ds-pixel-corner-step),
+    calc(var(--ds-pixel-corner-step) * 2) var(--ds-pixel-corner-step),
+    calc(var(--ds-pixel-corner-step) * 2) 0,
+    calc(100% - var(--ds-pixel-corner-step) * 2) 0,
+    calc(100% - var(--ds-pixel-corner-step) * 2) var(--ds-pixel-corner-step),
+    calc(100% - var(--ds-pixel-corner-step)) var(--ds-pixel-corner-step),
+    calc(100% - var(--ds-pixel-corner-step)) calc(var(--ds-pixel-corner-step) * 2),
+    100% calc(var(--ds-pixel-corner-step) * 2),
+    100% calc(100% - var(--ds-pixel-corner-step) * 2),
+    calc(100% - var(--ds-pixel-corner-step)) calc(100% - var(--ds-pixel-corner-step) * 2),
+    calc(100% - var(--ds-pixel-corner-step)) calc(100% - var(--ds-pixel-corner-step)),
+    calc(100% - var(--ds-pixel-corner-step) * 2) calc(100% - var(--ds-pixel-corner-step)),
+    calc(100% - var(--ds-pixel-corner-step) * 2) 100%,
+    calc(var(--ds-pixel-corner-step) * 2) 100%,
+    calc(var(--ds-pixel-corner-step) * 2) calc(100% - var(--ds-pixel-corner-step)),
+    var(--ds-pixel-corner-step) calc(100% - var(--ds-pixel-corner-step)),
+    var(--ds-pixel-corner-step) calc(100% - var(--ds-pixel-corner-step) * 2),
+    0 calc(100% - var(--ds-pixel-corner-step) * 2)
+  );
 }
 
 .ds-icon-button,
@@ -128,80 +181,240 @@
   color: var(--ds-color-danger-hover);
 }
 
-.ds-download-button[data-status="completed"] {
-  border-color: var(--ds-color-success);
-  background: color-mix(in srgb, var(--ds-color-success) 12%, var(--ds-color-surface));
-  color: var(--ds-color-success);
+.ds-download-button {
+  display: inline-flex;
+  width: min(100%, 678px);
+  height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border: 0;
+  background: #ffffff;
+  color: #050608;
+  cursor: pointer;
+  filter: drop-shadow(0 6px 5px rgba(214, 226, 235, 0.34));
+  font-family: var(--ds-font-family-pixel);
+  font-size: 14px;
+  line-height: 1.34;
+  letter-spacing: -0.015em;
+  padding: 0 28px;
+  transition:
+    background-color var(--ds-motion-fast) var(--ds-motion-easing),
+    color var(--ds-motion-fast) var(--ds-motion-easing),
+    filter var(--ds-motion-fast) var(--ds-motion-easing),
+    transform var(--ds-motion-fast) var(--ds-motion-easing);
+}
+
+.ds-download-button:hover:not(:disabled) {
+  filter: drop-shadow(0 8px 7px rgba(214, 226, 235, 0.46));
+  transform: translateY(-1px);
+}
+
+.ds-download-button:active:not(:disabled) {
+  filter: drop-shadow(0 3px 3px rgba(214, 226, 235, 0.34));
+  transform: translateY(1px);
+}
+
+.ds-download-button:disabled {
+  background: #dfdfdf;
+  color: #6a6a6a;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.ds-download-button[data-width="full"] {
+  width: 100%;
 }
 
 .ds-download-button[aria-busy="true"] {
   cursor: wait;
 }
 
-.ds-color-card {
+.ds-download-button-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ds-download-button-icon {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 14px;
+  color: currentColor;
+}
+
+.ds-download-bottom-sheet {
   display: grid;
-  grid-template-columns: minmax(96px, 34%) minmax(0, 1fr);
-  width: min(100%, 520px);
-  min-height: 184px;
-  overflow: hidden;
-  border: 1px solid var(--ds-color-border);
-  border-radius: var(--ds-radius-medium);
-  background: var(--ds-color-surface);
+  width: min(100%, 678px);
+  justify-items: center;
+  gap: 26px;
+}
+
+.ds-download-bottom-sheet-message {
+  min-height: 28px;
+  margin: 0;
+  color: #ffffff;
+  font-family: var(--ds-font-family-display);
+  font-size: 16px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.ds-remove-button {
+  display: inline-grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 0;
+  background: #ffffff;
+  color: #050608;
+  cursor: pointer;
+  filter: drop-shadow(0 5px 4px rgba(214, 226, 235, 0.28));
+  padding: 0;
+  transition:
+    background-color var(--ds-motion-fast) var(--ds-motion-easing),
+    filter var(--ds-motion-fast) var(--ds-motion-easing),
+    transform var(--ds-motion-fast) var(--ds-motion-easing);
+  clip-path: polygon(
+    36% 0,
+    64% 0,
+    64% 8%,
+    76% 8%,
+    76% 16%,
+    84% 16%,
+    84% 24%,
+    92% 24%,
+    92% 36%,
+    100% 36%,
+    100% 64%,
+    92% 64%,
+    92% 76%,
+    84% 76%,
+    84% 84%,
+    76% 84%,
+    76% 92%,
+    64% 92%,
+    64% 100%,
+    36% 100%,
+    36% 92%,
+    24% 92%,
+    24% 84%,
+    16% 84%,
+    16% 76%,
+    8% 76%,
+    8% 64%,
+    0 64%,
+    0 36%,
+    8% 36%,
+    8% 24%,
+    16% 24%,
+    16% 16%,
+    24% 16%,
+    24% 8%,
+    36% 8%
+  );
+}
+
+.ds-remove-button:hover:not(:disabled),
+.ds-remove-button[data-state="pressed"] {
+  background: #d9d9d9;
+  filter: none;
+  transform: translateY(2px);
+}
+
+.ds-remove-button:disabled {
+  background: #d9d9d9;
+  color: #777777;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.ds-remove-button[data-size="compact"] {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+}
+
+.ds-remove-button-icon {
+  width: 20px;
+  height: 24px;
+  color: currentColor;
+}
+
+.ds-color-card-root {
+  --ds-color-card-color: var(--ds-color-card-green);
+  position: relative;
+  z-index: 0;
+  flex: 0 0 auto;
+  width: var(--ds-color-card-max-width);
+  height: var(--ds-color-card-max-height);
+  max-width: var(--ds-color-card-max-width);
+  max-height: var(--ds-color-card-max-height);
+  overflow: visible;
+}
+
+.ds-color-card-glow {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  width: var(--ds-color-card-glow-size);
+  height: var(--ds-color-card-glow-size);
+  border-radius: 50%;
+  background: var(--ds-color-card-color);
+  content: "";
+  filter: blur(var(--ds-color-card-glow-blur));
+  opacity: var(--ds-color-card-glow-opacity);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.ds-color-card {
+  position: relative;
+  display: grid;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: 1fr;
+  align-content: start;
+  gap: 9px;
+  justify-items: center;
+  border: 1px solid #ffffff;
+  border-radius: 0;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f7f4 100%);
+  box-shadow: none;
+  box-sizing: border-box;
+  color: #050608;
+  padding: 11.89px 11.89px 12.28px;
 }
 
 .ds-color-card-preview {
-  min-height: 184px;
+  width: var(--ds-color-card-swatch-size);
+  height: var(--ds-color-card-swatch-size);
+  min-height: 0;
+  background: var(--ds-color-card-color);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .ds-color-card-body {
   display: grid;
-  align-content: center;
-  gap: 10px;
   min-width: 0;
-  padding: 20px;
+  min-height: var(--ds-color-card-label-font-size);
+  place-items: center;
 }
 
 .ds-color-card-title {
+  max-width: 100%;
   margin: 0;
-  color: var(--ds-color-muted-text);
-  font-size: 0.875rem;
-  font-weight: 800;
-}
-
-.ds-color-card-code {
-  color: var(--ds-color-text);
-  font:
-    1.5rem/1.2 ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    Monaco,
-    Consolas,
-    "Liberation Mono",
-    "Courier New",
-    monospace;
   overflow-wrap: anywhere;
-}
-
-.ds-color-card-description {
-  margin: 0;
-  color: var(--ds-color-muted-text);
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-.ds-status-label {
-  width: fit-content;
-  border-radius: var(--ds-radius-round);
-  background: #e8f4ef;
-  color: var(--ds-color-success);
-  font-size: 0.75rem;
-  font-weight: 800;
-  padding: 4px 8px;
-}
-
-.ds-color-card[data-status="loading"] .ds-status-label {
-  background: #fff7e3;
-  color: var(--ds-color-warning);
+  color: #050608;
+  font-family: var(--ds-font-family-display);
+  font-size: var(--ds-color-card-label-font-size);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .ds-image-board {
@@ -352,14 +565,6 @@
 }
 
 @media (max-width: 520px) {
-  .ds-color-card {
-    grid-template-columns: 1fr;
-  }
-
-  .ds-color-card-preview {
-    min-height: 128px;
-  }
-
   .ds-image-board {
     gap: 8px;
   }

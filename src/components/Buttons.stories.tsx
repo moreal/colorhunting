@@ -30,14 +30,18 @@ export const DownloadEnabled: Story = {
   render: () => <DownloadButton />,
 };
 
-export const DownloadCompleted: Story = {
-  render: () => <DownloadButton status="completed" />,
-};
-
 export const DownloadDisabled: Story = {
   render: () => <DownloadButton disabled />,
 };
 
 export const DownloadLoading: Story = {
   render: () => <DownloadButton status="loading" />,
+};
+
+export const RemoveEnabled: Story = {
+  render: () => <RemoveButton />,
+};
+
+export const RemovePressed: Story = {
+  render: () => <RemoveButton pressed />,
 };

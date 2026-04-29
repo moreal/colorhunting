@@ -20,11 +20,36 @@ export const designTokens = {
     disabledText: "#778492",
     focus: "#2563eb",
     slotBackground: "#eef3ef",
+    colorCard: {
+      pink: "#FEB9DE",
+      purple: "#AE7BFF",
+      navy: "#000080",
+      blue: "#76D1FF",
+      green: "#34C759",
+      yellow: "#FFE44B",
+      orange: "#FE931B",
+      red: "#EF4B4B",
+    },
   },
   font: {
+    display:
+      '"NeoDunggeunmo Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
     family:
       'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     mono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    pixel:
+      '"Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+  },
+  component: {
+    colorCard: {
+      maxWidth: "146.61px",
+      maxHeight: "174px",
+      swatchSize: "120.83px",
+      labelFontSize: "18px",
+      glowSize: "174px",
+      glowOpacity: "0.5",
+      glowBlur: "60px",
+    },
   },
   motion: {
     durationFast: "120ms",

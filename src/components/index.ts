@@ -4,7 +4,12 @@ export {
   type BottomActionBarProps,
 } from "./BottomActionBar";
 export { CloseButton, type CloseButtonProps } from "./CloseButton";
-export { ColorCard, type ColorCardProps, type ColorCardStatus } from "./ColorCard";
+export { ColorCard, type ColorCardProps } from "./ColorCard";
+export {
+  DownloadBottomSheet,
+  type DownloadBottomSheetProps,
+  type DownloadBottomSheetState,
+} from "./DownloadBottomSheet";
 export {
   DownloadButton,
   type DownloadButtonProps,
