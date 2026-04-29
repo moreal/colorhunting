@@ -1,5 +1,5 @@
 .image-board-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   background: #f0f1f5;
@@ -10,7 +10,7 @@
 .image-board-shell {
   display: grid;
   width: min(100%, 354px);
-  min-height: min(760px, calc(100vh - 48px));
+  min-height: min(760px, calc(100dvh - 48px));
   grid-template-rows: 180px minmax(364px, 1fr) 116px;
   overflow: hidden;
   background: #ffffff;
@@ -147,8 +147,8 @@
 
   .image-board-shell {
     width: 100%;
-    min-height: 100vh;
-    grid-template-rows: 174px minmax(360px, 1fr) 112px;
+    min-height: 100dvh;
+    grid-template-rows: minmax(144px, 22dvh) minmax(260px, 1fr) minmax(96px, 15dvh);
   }
 
   .image-board-header {

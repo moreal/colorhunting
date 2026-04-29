@@ -1,5 +1,5 @@
 import { useId, type ChangeEvent } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Image } from "../appState";
 import { classNames } from "./classNames";
 import { RemoveButton } from "./RemoveButton";
@@ -26,7 +26,10 @@ export function ImageSlot({
   slotIndex,
 }: ImageSlotProps) {
   const inputId = useId();
+  const shouldReduceMotion = useReducedMotion();
   const slotNumber = slotIndex + 1;
+  const contentScale = shouldReduceMotion ? 1 : 0.98;
+  const transition = { duration: shouldReduceMotion ? 0 : 0.18, ease: [0.2, 0, 0, 1] as const };
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0];
@@ -48,7 +51,7 @@ export function ImageSlot({
       data-state={image ? "filled" : "empty"}
       initial={false}
       role="group"
-      transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+      transition={transition}
     >
       <AnimatePresence initial={false} mode="wait">
         {image ? (
@@ -56,9 +59,9 @@ export function ImageSlot({
             key="filled"
             animate={{ opacity: 1, scale: 1 }}
             className="ds-image-slot-content"
-            exit={{ opacity: 0, scale: 0.98 }}
-            initial={{ opacity: 0.86, scale: 0.98 }}
-            transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+            exit={{ opacity: 0, scale: contentScale }}
+            initial={{ opacity: 0.86, scale: contentScale }}
+            transition={transition}
           >
             <img alt={image.altText} className="ds-image-slot-media" src={image.dataUrl} />
             <div className="ds-image-slot-overlay">
@@ -76,9 +79,9 @@ export function ImageSlot({
             key="empty"
             animate={{ opacity: 1, scale: 1 }}
             className="ds-image-slot-content"
-            exit={{ opacity: 0, scale: 0.98 }}
-            initial={{ opacity: 0.86, scale: 0.98 }}
-            transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+            exit={{ opacity: 0, scale: contentScale }}
+            initial={{ opacity: 0.86, scale: contentScale }}
+            transition={transition}
           >
             <input
               accept={accept}

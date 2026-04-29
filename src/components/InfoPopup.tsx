@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { classNames } from "./classNames";
 import { CloseButton } from "./CloseButton";
 
@@ -22,7 +22,9 @@ export function InfoPopup({
 }: InfoPopupProps) {
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (!open) {
@@ -36,6 +38,11 @@ export function InfoPopup({
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         onClose();
+        return;
+      }
+
+      if (event.key === "Tab") {
+        trapDialogFocus(event, dialogRef.current);
       }
     }
 
@@ -55,17 +62,18 @@ export function InfoPopup({
           className="ds-dialog-backdrop"
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
-          transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: [0.2, 0, 0, 1] }}
         >
           <motion.section
             animate={{ scale: 1, y: 0 }}
             aria-labelledby={titleId}
             aria-modal="true"
             className={classNames("ds-dialog-surface", className)}
-            exit={{ scale: 0.98, y: 8 }}
-            initial={{ scale: 0.98, y: 8 }}
+            exit={{ scale: shouldReduceMotion ? 1 : 0.98, y: shouldReduceMotion ? 0 : 8 }}
+            initial={{ scale: shouldReduceMotion ? 1 : 0.98, y: shouldReduceMotion ? 0 : 8 }}
+            ref={dialogRef}
             role="dialog"
-            transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: [0.2, 0, 0, 1] }}
           >
             <div className="ds-dialog-header">
               <h2 className="ds-dialog-title" id={titleId}>
@@ -79,4 +87,42 @@ export function InfoPopup({
       ) : null}
     </AnimatePresence>
   );
+}
+
+const FOCUSABLE_SELECTOR = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",");
+
+function trapDialogFocus(event: KeyboardEvent, dialogElement: HTMLElement | null) {
+  if (dialogElement === null) {
+    return;
+  }
+
+  const focusableElements = Array.from(
+    dialogElement.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+  ).filter((element) => !element.hasAttribute("disabled") && element.tabIndex !== -1);
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements.at(-1);
+
+  if (firstElement === undefined || lastElement === undefined) {
+    event.preventDefault();
+    dialogElement.focus();
+    return;
+  }
+
+  if (event.shiftKey && document.activeElement === firstElement) {
+    event.preventDefault();
+    lastElement.focus();
+    return;
+  }
+
+  if (!event.shiftKey && document.activeElement === lastElement) {
+    event.preventDefault();
+    firstElement.focus();
+  }
 }

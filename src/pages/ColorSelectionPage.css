@@ -1,5 +1,5 @@
 .color-selection-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   background: #f0f1f5;
@@ -11,7 +11,7 @@
   position: relative;
   display: grid;
   width: min(100%, var(--color-selection-panel-width));
-  min-height: min(var(--color-selection-panel-min-height), calc(100vh - 48px));
+  min-height: min(var(--color-selection-panel-min-height), calc(100dvh - 48px));
   grid-template-rows: auto 1fr;
   overflow: hidden;
   background: #242526;
@@ -145,8 +145,14 @@
 
   .color-selection-panel {
     width: 100%;
-    min-height: 100vh;
+    min-height: 100dvh;
     padding: var(--color-selection-panel-padding-top) var(--color-selection-panel-padding-x)
       var(--color-selection-panel-padding-bottom);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .color-selection-card-motion {
+    transition-duration: 0ms;
   }
 }

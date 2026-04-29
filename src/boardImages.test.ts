@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BOARD_IMAGE_FILE_ACCEPT,
+  MAX_BOARD_IMAGE_FILE_SIZE_BYTES,
   createBoardImageFromFile,
   isAcceptedBoardImageFile,
 } from "./boardImages";
@@ -43,6 +44,16 @@ describe("boardImages", () => {
     await expect(
       createBoardImageFromFile(new File(["image"], "palette.gif", { type: "image/gif" })),
     ).rejects.toThrow("Only PNG, JPEG, and WebP images can be added to the board.");
+  });
+
+  it("저장 한계를 넘는 큰 파일은 읽기 전에 거부한다", async () => {
+    const largeFile = new File([new Uint8Array(MAX_BOARD_IMAGE_FILE_SIZE_BYTES + 1)], "large.png", {
+      type: "image/png",
+    });
+
+    await expect(createBoardImageFromFile(largeFile)).rejects.toThrow(
+      "The selected image is too large to store.",
+    );
   });
 
   it("파일을 읽어도 저장 계약을 만족하지 못하면 이미지 상태를 만들지 않는다", async () => {

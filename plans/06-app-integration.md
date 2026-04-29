@@ -4,13 +4,13 @@ Plan 06: App Integration
 Status
 ------
 
- -  State: Not started
+ -  State: Done
  -  Owner: Main implementation agent
  -  Depends on:
      -  [Plan 02](./02-domain-state-and-storage.md)
      -  [Plan 04](./04-color-selection-page.md)
      -  [Plan 05](./05-image-board-page.md)
- -  Resume from: Start at “Application shell”
+ -  Resume from: Completed
  -  Commit message: `Connect persistent Colorhunting flow`
 
 
@@ -35,30 +35,30 @@ Behavior Scope
 Tasks
 -----
 
- -  [ ] Application shell
+ -  [x] Application shell
      -  Keep `App` responsible for loading, saving, and routing between the two
         state-driven pages.
      -  Avoid putting page-specific business logic in `App`.
- -  [ ] Startup states
+ -  [x] Startup states
      -  Add explicit loading state while storage is read.
      -  Add safe fallback state if storage fails.
      -  Ensure startup does not flash the wrong page.
- -  [ ] State actions
+ -  [x] State actions
      -  Add clear action callbacks for color confirmation, image changes, board
         reset, and full flow reset.
      -  Persist state after successful transitions.
      -  Handle persistence errors without corrupting in-memory state.
- -  [ ] Page transition motion
+ -  [x] Page transition motion
      -  Use Motion to animate between major app states.
      -  Keep animations deterministic enough for tests.
- -  [ ] Integration tests
+ -  [x] Integration tests
      -  Cover startup from no persisted state.
      -  Cover startup from confirmed color state.
      -  Cover confirm-to-board flow.
      -  Cover refresh-style state reload.
      -  Cover reset back to color selection.
      -  Use Korean test titles.
- -  [ ] Verification
+ -  [x] Verification
      -  Run `mise run test`.
      -  Run `mise run lint`.
      -  Run `mise run build`.

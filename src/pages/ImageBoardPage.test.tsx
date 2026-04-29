@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -75,13 +76,10 @@ describe("ImageBoardPage", () => {
       async () => image,
     );
     const saveBoardState = vi.fn<(state: ColorDeterminedAppState) => Promise<void>>(async () => {});
-    const onBoardChange = vi.fn<(state: ColorDeterminedAppState) => void>();
     render(
-      <ImageBoardPage
+      <ControlledImageBoardPage
         createImageFromFile={createImageFromFile}
-        onBoardChange={onBoardChange}
         saveBoardState={saveBoardState}
-        state={createBoardState()}
       />,
     );
 
@@ -94,7 +92,6 @@ describe("ImageBoardPage", () => {
 
     expect(createImageFromFile).toHaveBeenCalledWith(file, 0);
     await waitFor(() => expect(saveBoardState).toHaveBeenCalledWith(expectedState));
-    expect(onBoardChange).toHaveBeenCalledWith(expectedState);
     expect(await screen.findByRole("img", { name: "Sample image 1" })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeEnabled());
   });
@@ -144,11 +141,11 @@ describe("ImageBoardPage", () => {
       async () => new Blob(["board"], { type: "image/png" }),
     );
     render(
-      <ImageBoardPage
+      <ControlledImageBoardPage
         createImageFromFile={createImageFromFile}
         exportBoardImage={exportBoardImage}
         saveBoardState={saveBoardState}
-        state={createBoardState({ images: createBoard([[0, createSampleImage(1)]]) })}
+        initialState={createBoardState({ images: createBoard([[0, createSampleImage(1)]]) })}
       />,
     );
 
@@ -173,14 +170,14 @@ describe("ImageBoardPage", () => {
     const firstImage = createSampleImage(1);
     const secondImage = createSampleImage(2);
     render(
-      <ImageBoardPage
-        saveBoardState={saveBoardState}
-        state={createBoardState({
+      <ControlledImageBoardPage
+        initialState={createBoardState({
           images: createBoard([
             [0, firstImage],
             [1, secondImage],
           ]),
         })}
+        saveBoardState={saveBoardState}
       />,
     );
 
@@ -283,6 +280,22 @@ function createBoardState(
     images: options.images ?? createEmptyBoard(),
     state: "COLOR_DETERMINED",
   };
+}
+
+type ControlledImageBoardPageProps = Omit<
+  Parameters<typeof ImageBoardPage>[0],
+  "onBoardChange" | "state"
+> & {
+  initialState?: ColorDeterminedAppState;
+};
+
+function ControlledImageBoardPage({
+  initialState = createBoardState(),
+  ...props
+}: ControlledImageBoardPageProps) {
+  const [state, setState] = useState<ColorDeterminedAppState>(initialState);
+
+  return <ImageBoardPage {...props} onBoardChange={setState} state={state} />;
 }
 
 function createDeferred<T>() {

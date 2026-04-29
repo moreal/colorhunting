@@ -1,7 +1,8 @@
-import { createImage, type Image } from "./appState";
+import { MAX_IMAGE_DATA_URL_LENGTH, createImage, type Image } from "./appState";
 
 export const ACCEPTED_BOARD_IMAGE_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 export const BOARD_IMAGE_FILE_ACCEPT = ACCEPTED_BOARD_IMAGE_MIME_TYPES.join(",");
+export const MAX_BOARD_IMAGE_FILE_SIZE_BYTES = Math.floor((MAX_IMAGE_DATA_URL_LENGTH - 64) * 0.75);
 
 export type AcceptedBoardImageMimeType = (typeof ACCEPTED_BOARD_IMAGE_MIME_TYPES)[number];
 
@@ -17,6 +18,10 @@ export async function createBoardImageFromFile(
 ): Promise<Image> {
   if (!isAcceptedBoardImageFile(file)) {
     throw new Error("Only PNG, JPEG, and WebP images can be added to the board.");
+  }
+
+  if (file.size > MAX_BOARD_IMAGE_FILE_SIZE_BYTES) {
+    throw new Error("The selected image is too large to store.");
   }
 
   const image = createImage({

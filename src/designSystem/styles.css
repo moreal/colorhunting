@@ -668,7 +668,7 @@
   display: grid;
   gap: 18px;
   width: min(100%, 440px);
-  max-height: min(620px, calc(100vh - 36px));
+  max-height: min(620px, calc(100dvh - 36px));
   overflow: auto;
   border: 1px solid var(--ds-color-border);
   border-radius: var(--ds-radius-medium);
@@ -713,5 +713,15 @@
 
   .ds-image-slot-name {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-action-button,
+  .ds-download-button,
+  .ds-remove-button,
+  .ds-image-slot,
+  .ds-image-slot-content {
+    transition-duration: 0ms;
   }
 }

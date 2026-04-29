@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState, type CSSProperties } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { createColor, selectColor, type Color, type ColorDeterminedAppState } from "../appState";
-import { saveAppState } from "../appStorage";
 import { getReadableTextColor } from "../color";
 import { ColorCard, ConfirmButton, InfoButton, InfoPopup, Logo, ResetButton } from "../components";
 import { designTokens } from "../designSystem/tokens";
@@ -40,8 +39,9 @@ export function ColorSelectionPage({
   initialColor,
   onColorConfirmed,
   pickColorOption = pickRandomColorOption,
-  saveConfirmedState = saveAppState,
+  saveConfirmedState = noopSaveConfirmedState,
 }: ColorSelectionPageProps) {
+  const shouldReduceMotion = useReducedMotion();
   const [selectedColor, setSelectedColor] = useState<ColorSelectionOption>(
     () => initialColor ?? pickColorOption(null, COLOR_SELECTION_OPTIONS),
   );
@@ -130,10 +130,12 @@ export function ColorSelectionPage({
               key={selectedColor.color.hex}
               animate={{ opacity: 1, rotateY: 0 }}
               className="color-selection-card-motion"
-              exit={{ opacity: 0, rotateY: -90 }}
-              initial={{ opacity: 0, rotateY: 90 }}
+              exit={{ opacity: 0, rotateY: shouldReduceMotion ? 0 : -90 }}
+              initial={{ opacity: 0, rotateY: shouldReduceMotion ? 0 : 90 }}
               transition={{
-                duration: designTokens.component.colorSelection.cardFlipDurationSeconds,
+                duration: shouldReduceMotion
+                  ? 0
+                  : designTokens.component.colorSelection.cardFlipDurationSeconds,
                 ease: [0.2, 0, 0, 1],
               }}
             >
@@ -229,3 +231,5 @@ function createColorOption(label: string, hex: string): ColorSelectionOption {
 
   return { color, label };
 }
+
+async function noopSaveConfirmedState() {}

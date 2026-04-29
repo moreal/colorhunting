@@ -314,6 +314,24 @@ describe("design system components", () => {
     });
     expect(opener).toHaveFocus();
   });
+
+  it("정보 팝업은 Tab 포커스를 대화상자 안에 가둔다", async () => {
+    const user = userEvent.setup();
+    render(<InfoPopupHarness />);
+
+    await user.click(screen.getByRole("button", { name: "Open details" }));
+
+    const closeButton = screen.getByRole("button", { name: "Close information" });
+    const contentButton = screen.getByRole("button", { name: "Read details" });
+
+    expect(closeButton).toHaveFocus();
+    await user.tab();
+    expect(contentButton).toHaveFocus();
+    await user.tab();
+    expect(closeButton).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(contentButton).toHaveFocus();
+  });
 });
 
 function InfoPopupHarness() {
@@ -326,6 +344,7 @@ function InfoPopupHarness() {
       </button>
       <InfoPopup onClose={() => setOpen(false)} open={open} title="About Colorhunting">
         <p>Colorhunting keeps palette and image-board decisions in one flow.</p>
+        <button type="button">Read details</button>
       </InfoPopup>
     </>
   );

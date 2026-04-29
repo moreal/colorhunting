@@ -1,0 +1,20 @@
+.app-loading,
+.app-status-message {
+  width: min(100%, 390px);
+  margin: 0 auto;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.app-loading {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+
+.app-status-message {
+  color: #9a6b15;
+  background: #fff7da;
+}

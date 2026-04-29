@@ -6,7 +6,7 @@ import {
   type CSSProperties,
   type MouseEvent,
 } from "react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import {
   addImage,
   removeImage,
@@ -15,7 +15,6 @@ import {
   type ColorDeterminedAppState,
   type Image,
 } from "../appState";
-import { saveAppState } from "../appStorage";
 import { composeBoardImage } from "../boardExport";
 import { BOARD_IMAGE_FILE_ACCEPT, createBoardImageFromFile } from "../boardImages";
 import {
@@ -60,20 +59,18 @@ export function ImageBoardPage({
   exportBoardImage = defaultExportBoardImage,
   onBoardChange,
   onResetFlow,
-  saveBoardState = saveAppState,
+  saveBoardState = noopSaveBoardState,
   state,
   triggerDownload = triggerBoardDownload,
 }: ImageBoardPageProps) {
-  const [currentState, setCurrentState] = useState<ColorDeterminedAppState | null>(() =>
-    getColorDeterminedState(state),
-  );
+  const shouldReduceMotion = useReducedMotion();
+  const currentState = useMemo(() => getColorDeterminedState(state), [state]);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isSavingBoard, setIsSavingBoard] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState<"completed" | "idle" | "loading">("idle");
   const [boardError, setBoardError] = useState<string | null>(null);
 
   useEffect(() => {
-    setCurrentState(getColorDeterminedState(state));
     setDownloadStatus("idle");
     setBoardError(null);
   }, [state]);
@@ -102,7 +99,6 @@ export function ImageBoardPage({
   const persistNextState = useCallback(
     async (nextState: ColorDeterminedAppState) => {
       await saveBoardState(nextState);
-      setCurrentState(nextState);
       onBoardChange?.(nextState);
     },
     [onBoardChange, saveBoardState],
@@ -205,7 +201,11 @@ export function ImageBoardPage({
     <main aria-labelledby="image-board-title" className="image-board-page" style={pageStyle}>
       <section className="image-board-shell">
         <header className="image-board-header">
-          <Logo className="image-board-logo" onClick={handleLogoClick} />
+          <Logo
+            aria-label="Reset board and choose a new color"
+            className="image-board-logo"
+            onClick={handleLogoClick}
+          />
           <h1 className="image-board-title" id="image-board-title">
             {colorLabel}
           </h1>
@@ -238,7 +238,7 @@ export function ImageBoardPage({
             animate={{ opacity: downloadStatus === "loading" ? 0.72 : 1, y: 0 }}
             className="image-board-download-motion"
             initial={false}
-            transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: [0.2, 0, 0, 1] }}
           >
             <DownloadBottomSheet
               buttonProps={{
@@ -337,3 +337,5 @@ function createColorLabelsByHex(): Record<string, string> {
     ]),
   );
 }
+
+async function noopSaveBoardState() {}
