@@ -4,12 +4,12 @@ Plan 04: Color Selection Page
 Status
 ------
 
- -  State: Not started
+ -  State: Done
  -  Owner: Color selection page implementation agent
  -  Depends on:
      -  [Plan 02](./02-domain-state-and-storage.md)
      -  [Plan 03](./03-design-system-and-storybook.md)
- -  Resume from: Start at “Page behavior”
+ -  Resume from: Completed
  -  Commit message: `Build color selection page`
 
 
@@ -42,32 +42,32 @@ Behavior Scope
 Tasks
 -----
 
- -  [ ] Page behavior
+ -  [x] Page behavior
      -  Define how the initial color is chosen.
      -  Define reset behavior.
      -  Define confirm behavior.
      -  Define info popup open and close behavior.
- -  [ ] Component composition
+ -  [x] Component composition
      -  Compose existing design-system components instead of creating page-local
         duplicates.
      -  Use `Logo`, `InfoButton`, `ColorCard`, `InfoPopup`, and a confirm action
         button.
- -  [ ] Motion transitions
+ -  [x] Motion transitions
      -  Animate color card changes.
      -  Animate popup entry and exit.
      -  Animate the transition out of the page after confirmation if the app
         integration layer supports it.
- -  [ ] Accessibility and UX
+ -  [x] Accessibility and UX
      -  Confirm and reset controls must be keyboard accessible.
      -  Popup focus management must be explicit.
      -  Visible focus states must remain clear on dark and bright color states.
- -  [ ] Tests
+ -  [x] Tests
      -  Cover reset behavior.
      -  Cover confirm behavior and the emitted `AppState`.
      -  Cover popup open and close behavior.
      -  Cover keyboard behavior.
      -  Use Korean test titles.
- -  [ ] Verification
+ -  [x] Verification
      -  Run `mise run test`.
      -  Run `mise run lint`.
 

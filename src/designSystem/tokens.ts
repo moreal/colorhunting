@@ -44,6 +44,9 @@ export const designTokens = {
     actionButton: {
       cornerSize: "2px",
     },
+    pixelCorner: {
+      depth: "2px",
+    },
     colorCard: {
       maxWidth: "146.61px",
       maxHeight: "174px",
@@ -52,6 +55,22 @@ export const designTokens = {
       glowSize: "174px",
       glowOpacity: "0.5",
       glowBlur: "60px",
+    },
+    colorSelection: {
+      actionGap: "40px",
+      contentGap: "36px",
+      contentTopGap: "34px",
+      copyFontSize: "20px",
+      copyLineHeight: "1.5",
+      infoButtonRight: "16px",
+      infoButtonTop: "64px",
+      logoHeight: "39px",
+      logoWidth: "337px",
+      panelMinHeight: "844px",
+      panelPaddingBottom: "72px",
+      panelPaddingTop: "88px",
+      panelPaddingX: "26px",
+      panelWidth: "390px",
     },
   },
   motion: {

@@ -1,6 +1,7 @@
 import { useId, type ChangeEvent } from "react";
 import { motion } from "motion/react";
 import type { Image } from "../appState";
+import { BOARD_IMAGE_FILE_ACCEPT } from "../boardImages";
 import { classNames } from "./classNames";
 import { RemoveButton } from "./RemoveButton";
 
@@ -14,10 +15,8 @@ export type ImageSlotProps = {
   slotIndex: number;
 };
 
-const DEFAULT_ACCEPTED_IMAGE_TYPES = "image/png,image/jpeg,image/webp";
-
 export function ImageSlot({
-  accept = DEFAULT_ACCEPTED_IMAGE_TYPES,
+  accept = BOARD_IMAGE_FILE_ACCEPT,
   className,
   disabled = false,
   image,
@@ -83,8 +82,10 @@ export function ImageSlot({
         type="file"
       />
       <label className="ds-image-slot-empty" htmlFor={inputId}>
-        <strong>Slot {slotNumber}</strong>
-        <span>Add image</span>
+        <span aria-hidden="true" className="ds-image-slot-plus">
+          +
+        </span>
+        <span className="ds-visually-hidden">Add image to slot {slotNumber}</span>
       </label>
     </motion.div>
   );

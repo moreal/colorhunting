@@ -5,7 +5,7 @@ import { DownloadButton, type DownloadButtonProps } from "./DownloadButton";
 export type DownloadBottomSheetState = "DOWNLOAD_COMPLETED" | "ENOUGH_IMAGES" | "NON_ENOUGH_IMAGES";
 
 export type DownloadBottomSheetProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
-  buttonProps?: Omit<DownloadButtonProps, "disabled" | "fullWidth" | "status">;
+  buttonProps?: Omit<DownloadButtonProps, "disabled" | "fullWidth">;
   state: DownloadBottomSheetState;
 };
 

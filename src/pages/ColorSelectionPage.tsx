@@ -2,14 +2,7 @@ import { useCallback, useMemo, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { createColor, selectColor, type Color, type ColorDeterminedAppState } from "../appState";
 import { saveAppState } from "../appStorage";
-import {
-  ColorCard,
-  ConfirmButton,
-  InfoButton,
-  InfoPopup,
-  Logo,
-  ResetButton,
-} from "../components";
+import { ColorCard, ConfirmButton, InfoButton, InfoPopup, Logo, ResetButton } from "../components";
 import { designTokens } from "../designSystem/tokens";
 import "../designSystem/styles.css";
 import "./ColorSelectionPage.css";
@@ -63,6 +56,26 @@ export function ColorSelectionPage({
     () => ({ color: confirmTextColor }),
     [confirmTextColor],
   );
+  const pageStyle = useMemo<ColorSelectionPageStyle>(
+    () => ({
+      "--color-selection-action-gap": designTokens.component.colorSelection.actionGap,
+      "--color-selection-content-gap": designTokens.component.colorSelection.contentGap,
+      "--color-selection-content-top-gap": designTokens.component.colorSelection.contentTopGap,
+      "--color-selection-copy-font-size": designTokens.component.colorSelection.copyFontSize,
+      "--color-selection-copy-line-height": designTokens.component.colorSelection.copyLineHeight,
+      "--color-selection-info-button-right": designTokens.component.colorSelection.infoButtonRight,
+      "--color-selection-info-button-top": designTokens.component.colorSelection.infoButtonTop,
+      "--color-selection-logo-height": designTokens.component.colorSelection.logoHeight,
+      "--color-selection-logo-width": designTokens.component.colorSelection.logoWidth,
+      "--color-selection-panel-min-height": designTokens.component.colorSelection.panelMinHeight,
+      "--color-selection-panel-padding-bottom":
+        designTokens.component.colorSelection.panelPaddingBottom,
+      "--color-selection-panel-padding-top": designTokens.component.colorSelection.panelPaddingTop,
+      "--color-selection-panel-padding-x": designTokens.component.colorSelection.panelPaddingX,
+      "--color-selection-panel-width": designTokens.component.colorSelection.panelWidth,
+    }),
+    [],
+  );
 
   const resetColor = useCallback(() => {
     setSaveError(null);
@@ -86,7 +99,11 @@ export function ColorSelectionPage({
   }, [onColorConfirmed, saveConfirmedState, selectedColor.color]);
 
   return (
-    <main aria-labelledby="color-selection-title" className="color-selection-page">
+    <main
+      aria-labelledby="color-selection-title"
+      className="color-selection-page"
+      style={pageStyle}
+    >
       <section className="color-selection-panel">
         <header className="color-selection-header">
           <Logo className="color-selection-logo" />
@@ -110,11 +127,11 @@ export function ColorSelectionPage({
           <AnimatePresence mode="wait">
             <motion.div
               key={selectedColor.color.hex}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
+              animate={{ opacity: 1, rotateY: 0 }}
               className="color-selection-card-motion"
-              exit={{ opacity: 0, scale: 0.96, y: 10 }}
-              initial={{ opacity: 0, scale: 0.96, y: -10 }}
-              transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+              exit={{ opacity: 0, rotateY: -90 }}
+              initial={{ opacity: 0, rotateY: 90 }}
+              transition={{ duration: 0.26, ease: [0.2, 0, 0, 1] }}
             >
               <ColorCard color={selectedColor.color} title={selectedColor.label} />
             </motion.div>
@@ -123,6 +140,7 @@ export function ColorSelectionPage({
           <div className="color-selection-actions">
             <ResetButton disabled={isConfirming} label="Reset" onClick={resetColor} />
             <ConfirmButton
+              className="color-selection-confirm"
               color={selectedColor.color.hex}
               disabled={isConfirming}
               label={isConfirming ? "Saving" : "Confirm"}
@@ -147,13 +165,10 @@ export function ColorSelectionPage({
       >
         <div className="color-selection-info-content">
           <p>
-            특정한 색상을 정해 일상이나 자연 속에서 보물찾기하듯 찾고, 사진으로
-            기록하며 주변 환경을 새롭게 관찰하는 활동입니다.
+            특정한 색상을 정해 일상이나 자연 속에서 보물찾기하듯 찾고, 사진으로 기록하며 주변 환경을
+            새롭게 관찰하는 활동입니다.
           </p>
-          <p>
-            사진은 외부로 업로드되지 않고 사용 중인 기기 안에서만 저장됩니다. 삭제하지
-            마세요!
-          </p>
+          <p>사진은 외부로 업로드되지 않고 사용 중인 기기 안에서만 저장됩니다. 삭제하지 마세요!</p>
           <dl className="color-selection-credits">
             <div>
               <dt>Design by</dt>
@@ -169,6 +184,23 @@ export function ColorSelectionPage({
     </main>
   );
 }
+
+type ColorSelectionPageStyle = CSSProperties & {
+  "--color-selection-action-gap": string;
+  "--color-selection-content-gap": string;
+  "--color-selection-content-top-gap": string;
+  "--color-selection-copy-font-size": string;
+  "--color-selection-copy-line-height": string;
+  "--color-selection-info-button-right": string;
+  "--color-selection-info-button-top": string;
+  "--color-selection-logo-height": string;
+  "--color-selection-logo-width": string;
+  "--color-selection-panel-min-height": string;
+  "--color-selection-panel-padding-bottom": string;
+  "--color-selection-panel-padding-top": string;
+  "--color-selection-panel-padding-x": string;
+  "--color-selection-panel-width": string;
+};
 
 export function pickRandomColorOption(
   currentColor: ColorSelectionOption | null,

@@ -195,6 +195,9 @@ describe("design system components", () => {
     expect(designTokens.component.actionButton).toEqual({
       cornerSize: "2px",
     });
+    expect(designTokens.component.pixelCorner).toEqual({
+      depth: "2px",
+    });
     expect(designTokens.component.colorCard).toEqual({
       glowBlur: "60px",
       glowOpacity: "0.5",
@@ -203,6 +206,11 @@ describe("design system components", () => {
       maxHeight: "174px",
       maxWidth: "146.61px",
       swatchSize: "120.83px",
+    });
+    expect(designTokens.component.colorSelection).toMatchObject({
+      copyFontSize: "20px",
+      logoHeight: "39px",
+      logoWidth: "337px",
     });
     expect(designTokens.color.colorCard).toEqual({
       blue: "#76D1FF",
