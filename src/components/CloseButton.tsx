@@ -1,5 +1,6 @@
 import { forwardRef, type ButtonHTMLAttributes } from "react";
 import { classNames } from "./classNames";
+import closeIconUrl from "../close.svg";
 
 export type CloseButtonProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
@@ -20,7 +21,7 @@ export const CloseButton = forwardRef<HTMLButtonElement, CloseButtonProps>(funct
       type="button"
       {...buttonProps}
     >
-      <span aria-hidden="true">x</span>
+      <img alt="" aria-hidden="true" className="ds-icon-button-image" src={closeIconUrl} />
     </button>
   );
 });

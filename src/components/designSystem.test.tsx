@@ -7,6 +7,7 @@ import { designTokens } from "../designSystem/tokens";
 import { BottomActionBar } from "./BottomActionBar";
 import { CloseButton } from "./CloseButton";
 import { ColorCard } from "./ColorCard";
+import { ConfirmButton } from "./ConfirmButton";
 import { DownloadBottomSheet } from "./DownloadBottomSheet";
 import { DownloadButton } from "./DownloadButton";
 import { ImageBoard } from "./ImageBoard";
@@ -15,6 +16,7 @@ import { InfoButton } from "./InfoButton";
 import { InfoPopup } from "./InfoPopup";
 import { Logo } from "./Logo";
 import { RemoveButton } from "./RemoveButton";
+import { ResetButton } from "./ResetButton";
 
 describe("design system components", () => {
   afterEach(() => {
@@ -84,6 +86,34 @@ describe("design system components", () => {
 
     expect(button).toHaveAttribute("aria-busy", "true");
     expect(button).toBeDisabled();
+    await user.click(button);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("확인 버튼은 색상 prop을 배경색 변수로 전달하고 클릭을 실행한다", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn<() => void>();
+    render(<ConfirmButton color="#34C759" onClick={onClick} />);
+
+    const button = screen.getByRole("button", { name: "Confirm" });
+
+    expect(button).toHaveClass("ds-confirm-button");
+    expect(button).toHaveStyle("--ds-confirm-button-background: #34C759");
+    expect(button.querySelector(".ds-action-button-icon")).toHaveAttribute("aria-hidden", "true");
+    await user.click(button);
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("리셋 버튼은 명시적인 이름과 비활성 상태를 제공한다", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn<() => void>();
+    render(<ResetButton disabled onClick={onClick} />);
+
+    const button = screen.getByRole("button", { name: "Reset" });
+
+    expect(button).toHaveClass("ds-reset-button");
+    expect(button).toBeDisabled();
+    expect(button.querySelector(".ds-action-button-icon")).toHaveAttribute("aria-hidden", "true");
     await user.click(button);
     expect(onClick).not.toHaveBeenCalled();
   });
@@ -162,6 +192,9 @@ describe("design system components", () => {
   it("디자인 토큰은 컬러 카드 팔레트와 픽셀 표시 폰트를 제공한다", () => {
     expect(designTokens.font.display).toContain("NeoDunggeunmo Pro");
     expect(designTokens.font.pixel).toContain("Press Start 2P");
+    expect(designTokens.component.actionButton).toEqual({
+      cornerSize: "2px",
+    });
     expect(designTokens.component.colorCard).toEqual({
       glowBlur: "60px",
       glowOpacity: "0.5",

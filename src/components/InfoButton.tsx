@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 import { classNames } from "./classNames";
+import infoIconUrl from "../info.svg";
 
 export type InfoButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "type"> & {
   label?: string;
@@ -17,7 +18,7 @@ export function InfoButton({
       type="button"
       {...buttonProps}
     >
-      <span aria-hidden="true">i</span>
+      <img alt="" aria-hidden="true" className="ds-icon-button-image" src={infoIconUrl} />
     </button>
   );
 }

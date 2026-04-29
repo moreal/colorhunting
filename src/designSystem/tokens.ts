@@ -41,6 +41,9 @@ export const designTokens = {
       '"Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
   },
   component: {
+    actionButton: {
+      cornerSize: "2px",
+    },
     colorCard: {
       maxWidth: "146.61px",
       maxHeight: "174px",

@@ -1,4 +1,5 @@
 import { classNames } from "./classNames";
+import logoUrl from "../logo.svg";
 
 export type LogoProps = {
   className?: string;
@@ -7,10 +8,8 @@ export type LogoProps = {
 export function Logo({ className }: LogoProps) {
   return (
     <a aria-label="Colorhunting home" className={classNames("ds-logo", className)} href="/">
-      <span aria-hidden="true" className="ds-logo-mark">
-        CH
-      </span>
-      <span>Colorhunting</span>
+      <img alt="" aria-hidden="true" className="ds-logo-image" src={logoUrl} />
+      <span className="ds-visually-hidden">Colorhunting</span>
     </a>
   );
 }
