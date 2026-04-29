@@ -4,7 +4,7 @@ import {
   type BoardSlot,
   type Image as BoardImage,
 } from "./appState";
-import { normalizeHexColor } from "./color";
+import { getReadableTextColor, normalizeHexColor } from "./color";
 
 export const BOARD_EXPORT_WIDTH = 3024;
 export const BOARD_EXPORT_HEIGHT = 4032;
@@ -19,6 +19,7 @@ export type BoardCanvasExporter = (
   mimeType: BoardExportMimeType,
   quality?: number,
 ) => Promise<Blob>;
+export type BoardFontReady = () => Promise<void>;
 
 export type ComposeBoardImageOptions = {
   backgroundColor?: string;
@@ -30,6 +31,7 @@ export type ComposeBoardImageOptions = {
   loadImage?: BoardImageLoader;
   mimeType?: BoardExportMimeType;
   quality?: number;
+  waitForFonts?: BoardFontReady;
   width?: number;
 };
 
@@ -60,6 +62,8 @@ export async function composeBoardImage(
 
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
+
+  await (options.waitForFonts ?? waitForBrowserFonts)();
 
   drawBoardFrame(context, layout, {
     backgroundColor,
@@ -259,16 +263,6 @@ function getBackgroundColor(color: string | undefined): string {
   return backgroundColor;
 }
 
-function getReadableTextColor(hex: string): "#050608" | "#ffffff" {
-  const normalizedHex = hex.replace("#", "");
-  const red = Number.parseInt(normalizedHex.slice(0, 2), 16);
-  const green = Number.parseInt(normalizedHex.slice(2, 4), 16);
-  const blue = Number.parseInt(normalizedHex.slice(4, 6), 16);
-  const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
-
-  return luminance > 0.68 ? "#050608" : "#ffffff";
-}
-
 function createBrowserCanvas(width: number, height: number): HTMLCanvasElement {
   if (typeof document === "undefined") {
     throw new Error("Board export requires a browser document.");
@@ -279,6 +273,14 @@ function createBrowserCanvas(width: number, height: number): HTMLCanvasElement {
   canvas.height = height;
 
   return canvas;
+}
+
+async function waitForBrowserFonts(): Promise<void> {
+  if (typeof document === "undefined" || !("fonts" in document)) {
+    return;
+  }
+
+  await document.fonts.ready;
 }
 
 function loadBrowserImage(image: BoardImage): Promise<CanvasImageSource> {

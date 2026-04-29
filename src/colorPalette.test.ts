@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getReadableTextColor } from "./color";
 import { createPalette, normalizeHexColor } from "./colorPalette";
 
 describe("normalizeHexColor", () => {
@@ -11,6 +12,19 @@ describe("normalizeHexColor", () => {
     expect(normalizeHexColor("")).toBeNull();
     expect(normalizeHexColor("#12")).toBeNull();
     expect(normalizeHexColor("not-a-color")).toBeNull();
+  });
+});
+
+describe("getReadableTextColor", () => {
+  it("테마 색상에서 더 높은 대비를 가진 흑백 텍스트를 고른다", () => {
+    expect(getReadableTextColor("#ef4b4b")).toBe("#050608");
+    expect(getReadableTextColor("#34c759")).toBe("#050608");
+    expect(getReadableTextColor("#000080")).toBe("#ffffff");
+    expect(getReadableTextColor("#ffe44b")).toBe("#050608");
+  });
+
+  it("올바르지 않은 색상에는 대비 색상을 만들지 않는다", () => {
+    expect(() => getReadableTextColor("yellow")).toThrow("Invalid hex color");
   });
 });
 

@@ -6,6 +6,7 @@ export type DownloadBottomSheetState = "DOWNLOAD_COMPLETED" | "ENOUGH_IMAGES" | 
 
 export type DownloadBottomSheetProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
   buttonProps?: Omit<DownloadButtonProps, "disabled" | "fullWidth">;
+  disabled?: boolean;
   state: DownloadBottomSheetState;
 };
 
@@ -33,10 +34,12 @@ const DOWNLOAD_BOTTOM_SHEET_CONFIG: Record<
 export function DownloadBottomSheet({
   buttonProps,
   className,
+  disabled = false,
   state,
   ...sheetProps
 }: DownloadBottomSheetProps) {
   const stateConfig = DOWNLOAD_BOTTOM_SHEET_CONFIG[state];
+  const isDisabled = disabled || stateConfig.disabled;
 
   return (
     <div
@@ -44,7 +47,7 @@ export function DownloadBottomSheet({
       data-state={state}
       {...sheetProps}
     >
-      <DownloadButton {...buttonProps} disabled={stateConfig.disabled} fullWidth />
+      <DownloadButton {...buttonProps} disabled={isDisabled} fullWidth />
       <p aria-live="polite" className="ds-download-bottom-sheet-message" role="status">
         {stateConfig.message ?? ""}
       </p>

@@ -30,7 +30,7 @@ Execution Order
 | 2     | [Domain State and Persistent Storage](./02-domain-state-and-storage.md) | Done        | Start here if `AppState` and IndexedDB storage APIs do not exist.                 | Add persistent app state model                  |
 | 3     | [Design System and Storybook](./03-design-system-and-storybook.md)      | Done        | Start here if shared PascalCase UI components or Storybook are missing.           | Build Storybook design system components        |
 | 4     | [Color Selection Page](./04-color-selection-page.md)                    | Done        | Start here if color selection is not implemented as a page backed by app state.   | Build color selection page                      |
-| 5     | [Image Board Page](./05-image-board-page.md)                            | Not started | Start here if the 3x3 image board and board export flow are missing.              | Build image board and export flow               |
+| 5     | [Image Board Page](./05-image-board-page.md)                            | Done        | Start here if the 3x3 image board and board export flow are missing.              | Build image board and export flow               |
 | 6     | [App Integration](./06-app-integration.md)                              | Not started | Start here if the pages exist but are not wired into one persistent user flow.    | Connect persistent Colorhunting flow            |
 | 7     | [Review and Quality Gates](./07-review-and-quality-gates.md)            | Not started | Start here after the implementation pass is complete or reviewer feedback exists. | Apply review feedback and final quality checks  |
 

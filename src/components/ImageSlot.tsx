@@ -1,7 +1,6 @@
 import { useId, type ChangeEvent } from "react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import type { Image } from "../appState";
-import { BOARD_IMAGE_FILE_ACCEPT } from "../boardImages";
 import { classNames } from "./classNames";
 import { RemoveButton } from "./RemoveButton";
 
@@ -15,8 +14,10 @@ export type ImageSlotProps = {
   slotIndex: number;
 };
 
+const DEFAULT_IMAGE_SLOT_ACCEPT = "image/png,image/jpeg,image/webp";
+
 export function ImageSlot({
-  accept = BOARD_IMAGE_FILE_ACCEPT,
+  accept = DEFAULT_IMAGE_SLOT_ACCEPT,
   className,
   disabled = false,
   image,
@@ -37,56 +38,66 @@ export function ImageSlot({
     event.currentTarget.value = "";
   }
 
-  if (image) {
-    return (
-      <motion.div
-        animate={{ opacity: 1, scale: 1 }}
-        aria-label={`Image slot ${slotNumber}: ${image.name}`}
-        className={classNames("ds-image-slot", className)}
-        data-state="filled"
-        initial={{ opacity: 0.86, scale: 0.98 }}
-        role="group"
-        transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
-      >
-        <img alt={image.altText} className="ds-image-slot-media" src={image.dataUrl} />
-        <div className="ds-image-slot-overlay">
-          <span className="ds-image-slot-name">{image.name}</span>
-          <RemoveButton
-            disabled={disabled}
-            label={`Remove image from slot ${slotNumber}`}
-            onClick={() => onRemoveImage?.(slotIndex)}
-            size="compact"
-          />
-        </div>
-      </motion.div>
-    );
-  }
-
   return (
     <motion.div
       animate={{ opacity: disabled ? 0.64 : 1 }}
-      aria-label={`Add image to slot ${slotNumber}`}
+      aria-label={
+        image ? `Image slot ${slotNumber}: ${image.name}` : `Add image to slot ${slotNumber}`
+      }
       className={classNames("ds-image-slot", className)}
-      data-state="empty"
+      data-state={image ? "filled" : "empty"}
       initial={false}
       role="group"
       transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
     >
-      <input
-        accept={accept}
-        aria-label={`Upload image to slot ${slotNumber}`}
-        className="ds-image-slot-input"
-        disabled={disabled}
-        id={inputId}
-        onChange={handleFileChange}
-        type="file"
-      />
-      <label className="ds-image-slot-empty" htmlFor={inputId}>
-        <span aria-hidden="true" className="ds-image-slot-plus">
-          +
-        </span>
-        <span className="ds-visually-hidden">Add image to slot {slotNumber}</span>
-      </label>
+      <AnimatePresence initial={false} mode="wait">
+        {image ? (
+          <motion.div
+            key="filled"
+            animate={{ opacity: 1, scale: 1 }}
+            className="ds-image-slot-content"
+            exit={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0.86, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+          >
+            <img alt={image.altText} className="ds-image-slot-media" src={image.dataUrl} />
+            <div className="ds-image-slot-overlay">
+              <span className="ds-image-slot-name">{image.name}</span>
+              <RemoveButton
+                disabled={disabled}
+                label={`Remove image from slot ${slotNumber}`}
+                onClick={() => onRemoveImage?.(slotIndex)}
+                size="compact"
+              />
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="empty"
+            animate={{ opacity: 1, scale: 1 }}
+            className="ds-image-slot-content"
+            exit={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0.86, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+          >
+            <input
+              accept={accept}
+              aria-label={`Upload image to slot ${slotNumber}`}
+              className="ds-image-slot-input"
+              disabled={disabled}
+              id={inputId}
+              onChange={handleFileChange}
+              type="file"
+            />
+            <label className="ds-image-slot-empty" htmlFor={inputId}>
+              <span aria-hidden="true" className="ds-image-slot-plus">
+                +
+              </span>
+              <span className="ds-visually-hidden">Add image to slot {slotNumber}</span>
+            </label>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

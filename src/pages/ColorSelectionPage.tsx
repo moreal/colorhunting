@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { createColor, selectColor, type Color, type ColorDeterminedAppState } from "../appState";
 import { saveAppState } from "../appStorage";
+import { getReadableTextColor } from "../color";
 import { ColorCard, ConfirmButton, InfoButton, InfoPopup, Logo, ResetButton } from "../components";
 import { designTokens } from "../designSystem/tokens";
 import "../designSystem/styles.css";
@@ -175,7 +176,7 @@ export function ColorSelectionPage({
           <dl className="color-selection-credits">
             <div>
               <dt>Design by</dt>
-              <dd>BOYOUNG</dd>
+              <dd>SOYOUNG</dd>
             </div>
             <div>
               <dt>Developed by</dt>
@@ -227,14 +228,4 @@ function createColorOption(label: string, hex: string): ColorSelectionOption {
   }
 
   return { color, label };
-}
-
-function getReadableTextColor(hex: string): "#050608" | "#ffffff" {
-  const normalizedHex = hex.replace("#", "");
-  const red = Number.parseInt(normalizedHex.slice(0, 2), 16);
-  const green = Number.parseInt(normalizedHex.slice(2, 4), 16);
-  const blue = Number.parseInt(normalizedHex.slice(4, 6), 16);
-  const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
-
-  return luminance > 0.68 ? "#050608" : "#ffffff";
 }

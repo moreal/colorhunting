@@ -4,12 +4,12 @@ Plan 05: Image Board Page
 Status
 ------
 
- -  State: Not started
+ -  State: Done
  -  Owner: Image board page implementation agent
  -  Depends on:
      -  [Plan 02](./02-domain-state-and-storage.md)
      -  [Plan 03](./03-design-system-and-storybook.md)
- -  Resume from: Start at “Board behavior”
+ -  Resume from: Completed
  -  Commit message: `Build image board and export flow`
 
 
@@ -45,36 +45,36 @@ Behavior Scope
 Tasks
 -----
 
- -  [ ] Board behavior
+ -  [x] Board behavior
      -  Define accepted image input types.
      -  Define how uploaded images are represented in persisted state.
      -  Define removal behavior.
      -  Define when download is enabled, disabled, and completed.
- -  [ ] Board export module
+ -  [x] Board export module
      -  Implement image composition outside React rendering.
      -  Keep a stable API such as `composeBoardImage(images, options)`.
      -  Validate input before composition.
      -  Return a downloadable `Blob` or object URL through an explicit API.
- -  [ ] Page composition
+ -  [x] Page composition
      -  Use `ImageBoard`, `ImageSlot`, `RemoveButton`, and `DownloadButton`.
      -  Keep board slot updates flowing through domain transition helpers.
      -  Persist every meaningful board change.
- -  [ ] Motion transitions
+ -  [x] Motion transitions
      -  Animate image slot fill and removal.
      -  Animate download state changes.
      -  Avoid layout shifts in the 3x3 board.
- -  [ ] Accessibility and UX
+ -  [x] Accessibility and UX
      -  File inputs must have accessible labels.
      -  Removal controls must identify the slot they affect.
      -  Disabled download state must be clear and semantic.
      -  The board layout must remain stable on mobile-sized viewports.
- -  [ ] Tests
+ -  [x] Tests
      -  Cover empty, partial, and full board states.
      -  Cover image add and remove behavior.
      -  Cover download enablement and completed state.
      -  Cover export input validation.
      -  Use Korean test titles.
- -  [ ] Verification
+ -  [x] Verification
      -  Run `mise run test`.
      -  Run `mise run lint`.
 
