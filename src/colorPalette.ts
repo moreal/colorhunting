@@ -1,3 +1,7 @@
+import { normalizeHexColor } from "./color";
+
+export { normalizeHexColor } from "./color";
+
 export const DEFAULT_COLOR = "#4f46e5";
 
 type PaletteColorId = "base" | "complement" | "accent" | "tint" | "shade";
@@ -19,28 +23,6 @@ type HslColor = {
   saturation: number;
   lightness: number;
 };
-
-const HEX_COLOR_PATTERN = /^#?([\da-f]{3}|[\da-f]{6})$/i;
-
-export function normalizeHexColor(input: string): string | null {
-  const value = input.trim();
-  const match = HEX_COLOR_PATTERN.exec(value);
-
-  if (!match) {
-    return null;
-  }
-
-  const color = match[1].toLowerCase();
-
-  if (color.length === 3) {
-    return `#${color
-      .split("")
-      .map((character) => character + character)
-      .join("")}`;
-  }
-
-  return `#${color}`;
-}
 
 export function createPalette(input: string): PaletteColor[] {
   const normalizedColor = normalizeHexColor(input);

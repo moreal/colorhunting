@@ -4,10 +4,10 @@ Plan 02: Domain State and Persistent Storage
 Status
 ------
 
- -  State: Not started
+ -  State: Done
  -  Owner: Main implementation agent
  -  Depends on: [Plan 01](./01-react-migration.md)
- -  Resume from: Start at “Domain types”
+ -  Resume from: Completed
  -  Commit message: `Add persistent app state model`
 
 
@@ -39,30 +39,30 @@ The `images` array must always represent exactly 9 board slots.
 Tasks
 -----
 
- -  [ ] Domain types
+ -  [x] Domain types
      -  Define `Color` as the product-facing color type.
      -  Define `Image` as the persisted image-slot type.
      -  Define `AppState` as a discriminated union.
      -  Add helpers for creating a valid empty board and validating board length.
- -  [ ] State transition helpers
+ -  [x] State transition helpers
      -  Add pure helpers for selecting a color, resetting to no color, adding an
         image, removing an image, and replacing the full board.
      -  Ensure invalid slot indexes are rejected or ignored through explicit,
         tested behavior.
- -  [ ] IndexedDB storage module
+ -  [x] IndexedDB storage module
      -  Add a small storage adapter with public APIs such as `loadAppState`,
         `saveAppState`, and `clearAppState`.
      -  Keep browser APIs behind this module so UI tests can mock storage cleanly.
      -  Validate loaded data before accepting it.
      -  Fall back to `{ state: "NO_COLOR" }` for missing, corrupt, or incompatible
         data.
- -  [ ] Tests
+ -  [x] Tests
      -  Cover valid state transitions.
      -  Cover invalid slot indexes.
      -  Cover missing, corrupt, and incompatible stored data.
      -  Cover persistence and reload behavior at the storage API boundary.
      -  Use Korean test titles.
- -  [ ] Verification
+ -  [x] Verification
      -  Run `mise run test`.
      -  Run `mise run lint`.
 
