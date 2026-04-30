@@ -1,6 +1,7 @@
 import { useId, type ChangeEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Image } from "../domain/appState";
+import { BOARD_IMAGE_FILE_ACCEPT } from "../domain/boardImages";
 import { classNames } from "./classNames";
 import { RemoveButton } from "./RemoveButton";
 
@@ -14,7 +15,7 @@ export type ImageSlotProps = {
   slotIndex: number;
 };
 
-const DEFAULT_IMAGE_SLOT_ACCEPT = "image/png,image/jpeg,image/webp";
+const DEFAULT_IMAGE_SLOT_ACCEPT = BOARD_IMAGE_FILE_ACCEPT;
 
 export function ImageSlot({
   accept = DEFAULT_IMAGE_SLOT_ACCEPT,
@@ -63,7 +64,12 @@ export function ImageSlot({
             initial={{ opacity: 0.86, scale: contentScale }}
             transition={transition}
           >
-            <img alt={image.altText} className="ds-image-slot-media" src={image.dataUrl} />
+            <img
+              alt={image.altText}
+              className="ds-image-slot-media"
+              draggable={false}
+              src={image.dataUrl}
+            />
             <div className="ds-image-slot-overlay">
               <span className="ds-image-slot-name">{image.name}</span>
               <RemoveButton

@@ -66,10 +66,10 @@ export function useImageBoardReorder({
 }: UseImageBoardReorderOptions) {
   const slots = useMemo(() => createBoardSlots(images), [images]);
   const boardSlotsRef = useRef<BoardSlot[]>(slots);
+  const boardElementRef = useRef<HTMLDivElement | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const pressCandidateRef = useRef<PressCandidate | null>(null);
   const returnTimerRef = useRef<number | null>(null);
-  const slotRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [previewSlots, setPreviewSlots] = useState<BoardSlot[]>(() => slots);
   const setNextDragState = useCallback((nextState: DragState | null) => {
@@ -138,21 +138,15 @@ export function useImageBoardReorder({
   const beginDrag = useCallback(
     (slotIndex: number, pointerId: number, pointer: Point) => {
       const image = boardSlotsRef.current[slotIndex];
-      const slotRects = Array.from({ length: BOARD_SLOT_COUNT }, (_, index) => {
-        const slot = slotRefs.current[index];
+      const slotRects = getCurrentSlotRects(boardElementRef.current);
 
-        return slot === null || slot === undefined
-          ? null
-          : createRect(slot.getBoundingClientRect());
-      });
-
-      if (image === null || slotRects.some((rect) => rect === null)) {
+      if (image === null || slotRects === null) {
         return;
       }
 
       const originRect = slotRects[slotIndex];
 
-      if (originRect === null || originRect === undefined) {
+      if (originRect === undefined) {
         return;
       }
 
@@ -168,7 +162,7 @@ export function useImageBoardReorder({
           x: pointer.x - originRect.left,
           y: pointer.y - originRect.top,
         },
-        slotRects: slotRects as Rect[],
+        slotRects,
       };
 
       setPreviewSlots(boardSlotsRef.current);
@@ -194,6 +188,7 @@ export function useImageBoardReorder({
 
       const startPoint = getEventPoint(event);
 
+      event.preventDefault();
       event.currentTarget.setPointerCapture?.(event.pointerId);
       pressCandidateRef.current = {
         pointerId: event.pointerId,
@@ -352,8 +347,8 @@ export function useImageBoardReorder({
     [dragState],
   );
 
-  const setSlotElement = useCallback((slotIndex: number, element: HTMLDivElement | null) => {
-    slotRefs.current[slotIndex] = element;
+  const setBoardElement = useCallback((element: HTMLDivElement | null) => {
+    boardElementRef.current = element;
   }, []);
 
   return {
@@ -369,7 +364,7 @@ export function useImageBoardReorder({
     moveImageWithKeyboard,
     renderedSlots,
     reorderTransition,
-    setSlotElement,
+    setBoardElement,
     slots,
   };
 }
@@ -451,6 +446,32 @@ function getSlotIndexAtPoint(point: Point, slotRects: readonly Rect[]): number |
   );
 
   return slotIndex === -1 ? null : slotIndex;
+}
+
+function getCurrentSlotRects(boardElement: HTMLDivElement | null): Rect[] | null {
+  if (boardElement === null) {
+    return null;
+  }
+
+  const slotRects: Array<Rect | null> = Array.from({ length: BOARD_SLOT_COUNT }, () => null);
+
+  for (const slotElement of boardElement.querySelectorAll<HTMLElement>(
+    ".ds-image-board-reorder-slot[data-slot-index]",
+  )) {
+    const slotIndex = Number(slotElement.dataset.slotIndex);
+
+    if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= BOARD_SLOT_COUNT) {
+      return null;
+    }
+
+    slotRects[slotIndex] = createRect(slotElement.getBoundingClientRect());
+  }
+
+  if (slotRects.some((rect) => rect === null)) {
+    return null;
+  }
+
+  return slotRects as Rect[];
 }
 
 function createRect(rect: DOMRect): Rect {

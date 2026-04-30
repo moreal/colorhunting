@@ -6,6 +6,7 @@ import {
   getColorDeterminedState,
   getColorLabel,
   getImageBoardDownloadState,
+  hasEnoughBoardImages,
 } from "./imageBoard";
 
 describe("imageBoard", () => {
@@ -28,13 +29,22 @@ describe("imageBoard", () => {
 
   it("보드의 채운 이미지 수와 다운로드 바 상태를 계산한다", () => {
     const board = createEmptyBoard();
-    board[0] = createSampleImage(1);
-    board[4] = createSampleImage(4);
+    for (let slotIndex = 0; slotIndex < 8; slotIndex += 1) {
+      board[slotIndex] = createSampleImage(slotIndex);
+    }
 
-    expect(countFilledBoardImages(board)).toBe(2);
+    expect(countFilledBoardImages(board)).toBe(8);
+    expect(hasEnoughBoardImages(8)).toBe(false);
     expect(getImageBoardDownloadState(0, "idle")).toBe("NON_ENOUGH_IMAGES");
-    expect(getImageBoardDownloadState(2, "idle")).toBe("ENOUGH_IMAGES");
-    expect(getImageBoardDownloadState(2, "completed")).toBe("DOWNLOAD_COMPLETED");
+    expect(getImageBoardDownloadState(8, "idle")).toBe("NON_ENOUGH_IMAGES");
+    expect(getImageBoardDownloadState(8, "completed")).toBe("NON_ENOUGH_IMAGES");
+
+    board[8] = createSampleImage(8);
+
+    expect(countFilledBoardImages(board)).toBe(9);
+    expect(hasEnoughBoardImages(9)).toBe(true);
+    expect(getImageBoardDownloadState(9, "idle")).toBe("ENOUGH_IMAGES");
+    expect(getImageBoardDownloadState(9, "completed")).toBe("DOWNLOAD_COMPLETED");
   });
 
   it("제품 색상은 라벨로, 임의 색상은 정규화된 hex로 표시한다", () => {

@@ -12,12 +12,14 @@ import {
   COLOR_HUNTING_COLOR_HEX,
   getColorHuntingThemeTextColor,
 } from "../domain/colorHuntingTheme";
+import { BoardImageFileSizeError, MAX_BOARD_IMAGE_FILE_SIZE_LABEL } from "../domain/boardImages";
 import {
   countFilledBoardImages,
   createBoardDownloadFileName,
   getColorDeterminedState,
   getColorLabel,
   getImageBoardDownloadState,
+  hasEnoughBoardImages,
   type BoardDownloadStatus,
 } from "../domain/imageBoard";
 
@@ -60,7 +62,9 @@ type ImageBoardAction =
   | { type: "saveStarted" }
   | { type: "saveSucceeded" };
 
-const ADD_IMAGE_ERROR = "이미지를 추가하지 못했어요. PNG, JPG, WebP 파일을 사용해주세요.";
+const ADD_IMAGE_ERROR =
+  "이미지를 추가하지 못했어요. PNG, JPG, WebP, HEIF/HEIC 파일을 사용해주세요.";
+const ADD_IMAGE_FILE_SIZE_ERROR = `이미지 파일이 너무 커요. ${MAX_BOARD_IMAGE_FILE_SIZE_LABEL} 이하의 이미지를 선택해주세요.`;
 const REMOVE_IMAGE_ERROR = "이미지를 삭제하지 못했어요. 다시 시도해주세요.";
 const REORDER_IMAGE_ERROR = "이미지 위치를 바꾸지 못했어요. 다시 시도해주세요.";
 const DOWNLOAD_ERROR = "보드 이미지를 만들지 못했어요. 다시 시도해주세요.";
@@ -143,8 +147,8 @@ export function useImageBoardController({
 
         await persistNextState(nextState);
         dispatch({ type: "saveSucceeded" });
-      } catch {
-        dispatch({ error: ADD_IMAGE_ERROR, type: "saveFailed" });
+      } catch (error) {
+        dispatch({ error: getAddImageErrorMessage(error), type: "saveFailed" });
       }
     },
     [createImageFromFile, currentState, isBoardBusy, persistNextState],
@@ -206,7 +210,7 @@ export function useImageBoardController({
   );
 
   const downloadBoard = useCallback(async () => {
-    if (currentState === null || filledImageCount === 0 || isBoardBusy) {
+    if (currentState === null || !hasEnoughBoardImages(filledImageCount) || isBoardBusy) {
       return;
     }
 
@@ -303,4 +307,19 @@ function imageBoardInteractionReducer(
         isSavingBoard: false,
       };
   }
+}
+
+function getAddImageErrorMessage(error: unknown): string {
+  if (isBoardImageFileSizeError(error)) {
+    return ADD_IMAGE_FILE_SIZE_ERROR;
+  }
+
+  return ADD_IMAGE_ERROR;
+}
+
+function isBoardImageFileSizeError(error: unknown): boolean {
+  return (
+    error instanceof BoardImageFileSizeError ||
+    (error instanceof Error && error.name === "BoardImageFileSizeError")
+  );
 }

@@ -39,7 +39,7 @@ export function ImageBoard({
     moveImageWithKeyboard,
     renderedSlots,
     reorderTransition,
-    setSlotElement,
+    setBoardElement,
     slots,
   } = useImageBoardReorder({
     disabled,
@@ -55,6 +55,7 @@ export function ImageBoard({
       className={classNames("ds-image-board", className)}
       data-reordering={dragPhase}
       data-variant={variant}
+      ref={setBoardElement}
       role="group"
     >
       {renderedSlots.map((image, slotIndex) => {
@@ -70,11 +71,11 @@ export function ImageBoard({
             initial={false}
             key={getBoardSlotKey(image, slotIndex)}
             layout
+            onDragStart={(event) => event.preventDefault()}
             onPointerCancel={handlePointerCancel}
             onPointerDown={(event) => handlePointerDown(event, slotIndex)}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerEnd}
-            ref={(element) => setSlotElement(slotIndex, element)}
             transition={reorderTransition}
           >
             {image === null || !canReorder ? null : (

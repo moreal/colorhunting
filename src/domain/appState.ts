@@ -1,7 +1,8 @@
 import { normalizeHexColor } from "./color";
 
 export const BOARD_SLOT_COUNT = 9;
-export const MAX_IMAGE_DATA_URL_LENGTH = 1_500_000;
+// A 3 MB binary upload becomes about 4 MB when stored as a base64 data URL.
+export const MAX_IMAGE_DATA_URL_LENGTH = 4_000_064;
 
 export type Color = {
   hex: string;

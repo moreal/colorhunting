@@ -1,4 +1,9 @@
-import { type AppState, type BoardSlot, type ColorDeterminedAppState } from "./appState";
+import {
+  BOARD_SLOT_COUNT,
+  type AppState,
+  type BoardSlot,
+  type ColorDeterminedAppState,
+} from "./appState";
 import { normalizeHexColor } from "./color";
 import { COLOR_HUNTING_COLOR_HEX } from "./colorHuntingTheme";
 
@@ -15,11 +20,15 @@ export function countFilledBoardImages(images: readonly BoardSlot[]): number {
   return images.filter(Boolean).length;
 }
 
+export function hasEnoughBoardImages(filledImageCount: number): boolean {
+  return filledImageCount >= BOARD_SLOT_COUNT;
+}
+
 export function getImageBoardDownloadState(
   filledImageCount: number,
   downloadStatus: BoardDownloadStatus,
 ): ImageBoardDownloadState {
-  if (filledImageCount === 0) {
+  if (!hasEnoughBoardImages(filledImageCount)) {
     return "NON_ENOUGH_IMAGES";
   }
 

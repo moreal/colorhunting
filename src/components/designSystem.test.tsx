@@ -2,7 +2,7 @@ import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { Image } from "../domain/appState";
+import { moveBoardSlot, type BoardSlot, type Image } from "../domain/appState";
 import { designTokens } from "../designSystem/tokens";
 import {
   beginLongPressSlotDrag,
@@ -266,7 +266,7 @@ describe("design system components", () => {
     expect(screen.getByRole("group", { name: "Add image to slot 3" })).toBeInTheDocument();
     expect(screen.getByLabelText("Upload image to slot 3")).toHaveAttribute(
       "accept",
-      "image/png,image/jpeg,image/webp",
+      "image/png,image/jpeg,image/webp,image/heif,image/heic,.png,.jpg,.jpeg,.webp,.heif,.heic",
     );
   });
 
@@ -286,7 +286,10 @@ describe("design system components", () => {
     const onRemoveImage = vi.fn<(slotIndex: number) => void>();
     render(<ImageSlot image={createSampleImage(1)} onRemoveImage={onRemoveImage} slotIndex={0} />);
 
-    expect(screen.getByRole("img", { name: "Sample image 1" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Sample image 1" })).toHaveAttribute(
+      "draggable",
+      "false",
+    );
     await user.click(screen.getByRole("button", { name: "Remove image from slot 1" }));
 
     expect(onRemoveImage).toHaveBeenCalledWith(0);
@@ -495,6 +498,57 @@ describe("design system components", () => {
     await user.tab({ shift: true });
     expect(contentButton).toHaveFocus();
   });
+
+  it("이미지 보드는 저장된 순서가 바뀐 뒤에도 다시 드래그할 수 있다", async () => {
+    vi.useFakeTimers();
+    render(<ControlledImageBoard images={[createSampleImage(1), createSampleImage(2)]} />);
+
+    let slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
+
+    beginLongPressSlotDrag(slotFrames, 0);
+    moveSlotDragTo(slotFrames, 0, 2);
+    dropSlotDragAt(slotFrames, 0, 2);
+    await act(async () => {});
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    await act(async () => {});
+
+    expect(screen.getAllByRole("img").map((image) => image.getAttribute("alt"))).toEqual([
+      "Sample image 2",
+      "Sample image 1",
+    ]);
+    expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
+      "data-reordering",
+    );
+
+    slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
+
+    beginLongPressSlotDrag(slotFrames, 2);
+    expect(screen.getByRole("group", { name: /Image board/ })).toHaveAttribute(
+      "data-reordering",
+      "dragging",
+    );
+    moveSlotDragTo(slotFrames, 2, 0);
+    dropSlotDragAt(slotFrames, 2, 0);
+    await act(async () => {});
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    await act(async () => {});
+
+    expect(screen.getAllByRole("img").map((image) => image.getAttribute("alt"))).toEqual([
+      "Sample image 1",
+      "Sample image 2",
+    ]);
+    expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
+      "data-reordering",
+    );
+  });
 });
 
 function InfoPopupHarness() {
@@ -511,6 +565,32 @@ function InfoPopupHarness() {
       </InfoPopup>
     </>
   );
+}
+
+function ControlledImageBoard({ images }: { images: readonly BoardSlot[] }) {
+  const [boardImages, setBoardImages] = useState<readonly BoardSlot[]>(() =>
+    createTestBoard(images),
+  );
+
+  return (
+    <ImageBoard
+      images={boardImages}
+      onReorderImages={(fromIndex, toIndex) => {
+        const nextImages = moveBoardSlot(boardImages, fromIndex, toIndex);
+
+        if (nextImages === null) {
+          return false;
+        }
+
+        setBoardImages(nextImages);
+        return true;
+      }}
+    />
+  );
+}
+
+function createTestBoard(images: readonly BoardSlot[]): BoardSlot[] {
+  return Array.from({ length: 9 }, (_, index) => images[index] ?? null);
 }
 
 function createSampleImage(index: number): Image {

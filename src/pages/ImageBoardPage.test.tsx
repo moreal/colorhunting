@@ -9,6 +9,7 @@ import {
   type ColorDeterminedAppState,
   type Image,
 } from "../domain/appState";
+import { BoardImageFileSizeError, MAX_BOARD_IMAGE_FILE_SIZE_BYTES } from "../domain/boardImages";
 import { designTokens } from "../designSystem/tokens";
 import {
   beginLongPressSlotDrag,
@@ -60,9 +61,12 @@ describe("ImageBoardPage", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("부분적으로 채운 보드는 다운로드를 활성화한다", () => {
+  it("부분적으로 채운 보드는 다운로드를 막는다", async () => {
+    const user = userEvent.setup();
+    const exportBoardImage = vi.fn<ExportBoardImage>(async () => new Blob(["board"]));
     render(
       <ImageBoardPage
+        exportBoardImage={exportBoardImage}
         state={createBoardState({ images: createBoard([[0, createSampleImage(1)]]) })}
       />,
     );
@@ -70,8 +74,12 @@ describe("ImageBoardPage", () => {
     expect(
       screen.getByRole("group", { name: "Image board, 1 of 9 slots filled" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeEnabled();
-    expect(screen.queryByText("아직 비어있어요...")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeDisabled();
+    expect(screen.getByText("아직 비어있어요...")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "DOWNLOAD" }));
+
+    expect(exportBoardImage).not.toHaveBeenCalled();
   });
 
   it("가득 채운 보드는 모든 슬롯을 채운 상태로 읽힌다", () => {
@@ -118,7 +126,10 @@ describe("ImageBoardPage", () => {
     expect(createImageFromFile).toHaveBeenCalledWith(file, 0);
     await waitFor(() => expect(saveBoardState).toHaveBeenCalledWith(expectedState));
     expect(await screen.findByRole("img", { name: "Sample image 1" })).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeEnabled());
+    expect(
+      screen.getByRole("group", { name: "Image board, 1 of 9 slots filled" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeDisabled();
   });
 
   it("이미지 저장에 실패하면 보드를 바꾸지 않고 오류를 보여준다", async () => {
@@ -146,19 +157,45 @@ describe("ImageBoardPage", () => {
     );
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "이미지를 추가하지 못했어요. PNG, JPG, WebP 파일을 사용해주세요.",
+      "이미지를 추가하지 못했어요. PNG, JPG, WebP, HEIF/HEIC 파일을 사용해주세요.",
     );
     expect(onBoardChange).not.toHaveBeenCalled();
     expect(screen.queryByRole("img", { name: "Sample image 1" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeDisabled();
   });
 
+  it("파일 크기 제한으로 이미지 추가가 실패하면 크기 안내를 보여준다", async () => {
+    const user = userEvent.setup();
+    const createImageFromFile = vi.fn<(file: File, slotIndex: number) => Promise<Image>>(
+      async () => {
+        throw new BoardImageFileSizeError(MAX_BOARD_IMAGE_FILE_SIZE_BYTES + 1);
+      },
+    );
+    const saveBoardState = vi.fn<(state: ColorDeterminedAppState) => Promise<void>>(async () => {});
+    render(
+      <ImageBoardPage
+        createImageFromFile={createImageFromFile}
+        saveBoardState={saveBoardState}
+        state={createBoardState()}
+      />,
+    );
+
+    const file = new File(["image"], "large.png", { type: "image/png" });
+    await user.upload(screen.getByLabelText("Upload image to slot 1"), file);
+
+    expect(createImageFromFile).toHaveBeenCalledWith(file, 0);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "이미지 파일이 너무 커요. 3MB 이하의 이미지를 선택해주세요.",
+    );
+    expect(saveBoardState).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("img", { name: "Uploaded board image large.png" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("저장 중에는 오래된 보드를 다운로드하지 못하게 막는다", async () => {
     const user = userEvent.setup();
     const saveDeferred = createDeferred<void>();
-    const createImageFromFile = vi.fn<(file: File, slotIndex: number) => Promise<Image>>(async () =>
-      createSampleImage(2),
-    );
     const saveBoardState = vi.fn<(state: ColorDeterminedAppState) => Promise<void>>(
       () => saveDeferred.promise,
     );
@@ -167,17 +204,13 @@ describe("ImageBoardPage", () => {
     );
     render(
       <ControlledImageBoardPage
-        createImageFromFile={createImageFromFile}
         exportBoardImage={exportBoardImage}
         saveBoardState={saveBoardState}
-        initialState={createBoardState({ images: createBoard([[0, createSampleImage(1)]]) })}
+        initialState={createBoardState({ images: createFilledBoard() })}
       />,
     );
 
-    await user.upload(
-      screen.getByLabelText("Upload image to slot 2"),
-      new File(["image"], "green.png", { type: "image/png" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Remove image from slot 2" }));
 
     await waitFor(() => expect(saveBoardState).toHaveBeenCalledOnce());
     expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeDisabled();
@@ -186,7 +219,12 @@ describe("ImageBoardPage", () => {
     expect(exportBoardImage).not.toHaveBeenCalled();
 
     saveDeferred.resolve();
-    await waitFor(() => expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeEnabled());
+    await waitFor(() =>
+      expect(
+        screen.getByRole("group", { name: "Image board, 8 of 9 slots filled" }),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeDisabled();
   });
 
   it("이미지를 제거하면 요청한 슬롯만 비우고 저장한다", async () => {
@@ -321,7 +359,7 @@ describe("ImageBoardPage", () => {
     const blob = new Blob(["board"], { type: "image/png" });
     const exportBoardImage = vi.fn<ExportBoardImage>(async () => blob);
     const triggerDownload = vi.fn<TriggerBoardDownload>();
-    const state = createBoardState({ images: createBoard([[0, createSampleImage(1)]]) });
+    const state = createBoardState({ images: createFilledBoard() });
     render(
       <ImageBoardPage
         exportBoardImage={exportBoardImage}
@@ -354,7 +392,7 @@ describe("ImageBoardPage", () => {
     render(
       <ImageBoardPage
         exportBoardImage={exportBoardImage}
-        state={createBoardState({ images: createBoard([[0, createSampleImage(1)]]) })}
+        state={createBoardState({ images: createFilledBoard() })}
         triggerDownload={triggerDownload}
       />,
     );
@@ -457,6 +495,12 @@ function createBoard(entries: Array<[number, Image]> = []): Board {
   }
 
   return board;
+}
+
+function createFilledBoard(): Board {
+  return createBoard(
+    Array.from({ length: 9 }, (_, index) => [index, createSampleImage(index)] as [number, Image]),
+  );
 }
 
 function createSampleImage(index: number): Image {
