@@ -6,7 +6,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { BOARD_SLOT_COUNT, moveBoardSlot, type BoardSlot } from "../domain/appState";
+import { BOARD_SLOT_COUNT, moveBoardSlot, type BoardSlot, type Image } from "../domain/appState";
 
 export type ReorderImages = (
   fromIndex: number,
@@ -27,15 +27,18 @@ type Point = {
 
 type Rect = {
   bottom: number;
+  height: number;
   left: number;
   right: number;
   top: number;
+  width: number;
 };
 
 type DragPhase = "dragging" | "returning" | "settling";
 
 type DragState = {
   dropIndex: number | null;
+  image: Image;
   imageId: string;
   originIndex: number;
   phase: DragPhase;
@@ -52,7 +55,7 @@ type PressCandidate = {
 };
 
 const LONG_PRESS_REORDER_DELAY_MS = 260;
-const POINTER_MOVE_CANCEL_DISTANCE = 8;
+const POINTER_MOVE_CANCEL_DISTANCE = 14;
 const REORDER_SETTLE_DURATION_MS = 180;
 
 export function useImageBoardReorder({
@@ -69,12 +72,17 @@ export function useImageBoardReorder({
   const slotRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [previewSlots, setPreviewSlots] = useState<BoardSlot[]>(() => slots);
+  const setNextDragState = useCallback((nextState: DragState | null) => {
+    dragStateRef.current = nextState;
+    setDragState(nextState);
+  }, []);
   const canReorder = onReorderImages !== undefined && !disabled;
   const renderedSlots = dragState === null ? slots : previewSlots;
   const reorderTransition = {
     duration: shouldReduceMotion ? 0 : 0.18,
     ease: [0.2, 0, 0, 1] as const,
   };
+  const dragOverlay = dragState === null ? null : createDragOverlay(dragState);
 
   useEffect(() => {
     boardSlotsRef.current = slots;
@@ -100,25 +108,23 @@ export function useImageBoardReorder({
 
     returnTimerRef.current = window.setTimeout(
       () => {
-        setDragState(null);
-        dragStateRef.current = null;
+        setNextDragState(null);
       },
       shouldReduceMotion ? 0 : REORDER_SETTLE_DURATION_MS,
     );
-  }, [shouldReduceMotion]);
+  }, [setNextDragState, shouldReduceMotion]);
 
   const returnDragToOrigin = useCallback(
     (state: DragState) => {
       const originRect = state.slotRects[state.originIndex];
 
       if (originRect === undefined) {
-        setDragState(null);
-        dragStateRef.current = null;
+        setNextDragState(null);
         return;
       }
 
       setPreviewSlots(boardSlotsRef.current);
-      setDragState({
+      setNextDragState({
         ...state,
         dropIndex: state.originIndex,
         phase: "returning",
@@ -126,44 +132,50 @@ export function useImageBoardReorder({
       });
       clearDragAfterSettle();
     },
-    [clearDragAfterSettle],
+    [clearDragAfterSettle, setNextDragState],
   );
 
-  const beginDrag = useCallback((slotIndex: number, pointerId: number, pointer: Point) => {
-    const image = boardSlotsRef.current[slotIndex];
-    const slotRects = Array.from({ length: BOARD_SLOT_COUNT }, (_, index) => {
-      const slot = slotRefs.current[index];
+  const beginDrag = useCallback(
+    (slotIndex: number, pointerId: number, pointer: Point) => {
+      const image = boardSlotsRef.current[slotIndex];
+      const slotRects = Array.from({ length: BOARD_SLOT_COUNT }, (_, index) => {
+        const slot = slotRefs.current[index];
 
-      return slot === null || slot === undefined ? null : createRect(slot.getBoundingClientRect());
-    });
+        return slot === null || slot === undefined
+          ? null
+          : createRect(slot.getBoundingClientRect());
+      });
 
-    if (image === null || slotRects.some((rect) => rect === null)) {
-      return;
-    }
+      if (image === null || slotRects.some((rect) => rect === null)) {
+        return;
+      }
 
-    const originRect = slotRects[slotIndex];
+      const originRect = slotRects[slotIndex];
 
-    if (originRect === null || originRect === undefined) {
-      return;
-    }
+      if (originRect === null || originRect === undefined) {
+        return;
+      }
 
-    const nextDragState: DragState = {
-      dropIndex: slotIndex,
-      imageId: image.id,
-      originIndex: slotIndex,
-      phase: "dragging",
-      pointer,
-      pointerId,
-      pointerOffset: {
-        x: pointer.x - originRect.left,
-        y: pointer.y - originRect.top,
-      },
-      slotRects: slotRects as Rect[],
-    };
+      const nextDragState: DragState = {
+        dropIndex: slotIndex,
+        image,
+        imageId: image.id,
+        originIndex: slotIndex,
+        phase: "dragging",
+        pointer,
+        pointerId,
+        pointerOffset: {
+          x: pointer.x - originRect.left,
+          y: pointer.y - originRect.top,
+        },
+        slotRects: slotRects as Rect[],
+      };
 
-    setPreviewSlots(boardSlotsRef.current);
-    setDragState(nextDragState);
-  }, []);
+      setPreviewSlots(boardSlotsRef.current);
+      setNextDragState(nextDragState);
+    },
+    [setNextDragState],
+  );
 
   const handlePointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>, slotIndex: number) => {
@@ -226,24 +238,24 @@ export function useImageBoardReorder({
     const dropIndex = getSlotIndexAtPoint(point, state.slotRects);
 
     if (dropIndex === null) {
-      setDragState({ ...state, dropIndex, pointer: point });
+      setNextDragState({ ...state, dropIndex, pointer: point });
       return;
     }
 
     if (dropIndex === state.dropIndex) {
-      setDragState({ ...state, pointer: point });
+      setNextDragState({ ...state, pointer: point });
       return;
     }
 
     const nextSlots = moveBoardSlot(boardSlotsRef.current, state.originIndex, dropIndex);
 
     if (nextSlots === null) {
-      setDragState({ ...state, dropIndex: null, pointer: point });
+      setNextDragState({ ...state, dropIndex: null, pointer: point });
       return;
     }
 
     setPreviewSlots(nextSlots);
-    setDragState({
+    setNextDragState({
       ...state,
       dropIndex,
       pointer: point,
@@ -280,7 +292,7 @@ export function useImageBoardReorder({
         return;
       }
 
-      setDragState({
+      setNextDragState({
         ...state,
         phase: "settling",
         pointer: getPointForSlot(targetRect, state.pointerOffset),
@@ -325,10 +337,10 @@ export function useImageBoardReorder({
   );
 
   const getSlotAnimation = useCallback(
-    (slotIndex: number, image: BoardSlot) => {
+    (image: BoardSlot) => {
       const isDraggingSlot = image !== null && dragState?.imageId === image.id;
 
-      return getDragSlotAnimation(slotIndex, dragState, isDraggingSlot);
+      return getGridSlotAnimation(isDraggingSlot);
     },
     [dragState],
   );
@@ -346,6 +358,7 @@ export function useImageBoardReorder({
 
   return {
     canReorder,
+    dragOverlay,
     dragPhase: dragState?.phase,
     getSlotAnimation,
     getSlotDragState,
@@ -387,25 +400,26 @@ async function commitReorder(
   clearDragAfterSettle();
 }
 
-function getDragSlotAnimation(
-  slotIndex: number,
-  dragState: DragState | null,
-  isDraggingSlot: boolean,
-) {
-  if (dragState === null || !isDraggingSlot) {
-    return { scale: 1, x: 0, y: 0 };
-  }
-
-  const slotRect = dragState.slotRects[slotIndex];
-
-  if (slotRect === undefined) {
-    return { scale: 1, x: 0, y: 0 };
-  }
+function createDragOverlay(dragState: DragState) {
+  const originRect = dragState.slotRects[dragState.originIndex];
 
   return {
-    scale: dragState.phase === "dragging" ? 1.03 : 1,
-    x: dragState.pointer.x - dragState.pointerOffset.x - slotRect.left,
-    y: dragState.pointer.y - dragState.pointerOffset.y - slotRect.top,
+    animation: {
+      scale: dragState.phase === "dragging" ? 1.03 : 1,
+      x: dragState.pointer.x - dragState.pointerOffset.x,
+      y: dragState.pointer.y - dragState.pointerOffset.y,
+    },
+    height: originRect?.height ?? 0,
+    image: dragState.image,
+    slotIndex: dragState.originIndex,
+    width: originRect?.width ?? 0,
+  };
+}
+
+function getGridSlotAnimation(isDraggingSlot: boolean) {
+  return {
+    opacity: isDraggingSlot ? 0 : 1,
+    scale: 1,
   };
 }
 
@@ -442,9 +456,11 @@ function getSlotIndexAtPoint(point: Point, slotRects: readonly Rect[]): number |
 function createRect(rect: DOMRect): Rect {
   return {
     bottom: rect.bottom,
+    height: rect.height,
     left: rect.left,
     right: rect.right,
     top: rect.top,
+    width: rect.width,
   };
 }
 

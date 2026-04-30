@@ -28,6 +28,7 @@ export function ImageBoard({
   const shouldReduceMotion = useReducedMotion();
   const {
     canReorder,
+    dragOverlay,
     dragPhase,
     getSlotAnimation,
     getSlotDragState,
@@ -61,7 +62,7 @@ export function ImageBoard({
 
         return (
           <motion.div
-            animate={getSlotAnimation(slotIndex, image)}
+            animate={getSlotAnimation(image)}
             className="ds-image-board-reorder-slot"
             data-drag-state={slotDragState}
             data-draggable={image !== null && canReorder ? "true" : undefined}
@@ -113,6 +114,21 @@ export function ImageBoard({
         <span aria-live="polite" className="ds-visually-hidden">
           Moving image
         </span>
+      )}
+      {dragOverlay === null ? null : (
+        <motion.div
+          animate={dragOverlay.animation}
+          aria-hidden="true"
+          className="ds-image-board-drag-overlay"
+          initial={false}
+          style={{
+            height: dragOverlay.height,
+            width: dragOverlay.width,
+          }}
+          transition={reorderTransition}
+        >
+          <ImageSlot disabled image={dragOverlay.image} slotIndex={dragOverlay.slotIndex} />
+        </motion.div>
       )}
     </div>
   );

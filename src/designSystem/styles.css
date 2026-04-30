@@ -563,8 +563,18 @@ button.ds-logo {
 
 .ds-image-board-reorder-slot[data-drag-state] {
   z-index: 2;
+  user-select: none;
+}
+
+.ds-image-board-drag-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  display: grid;
   cursor: grabbing;
   filter: drop-shadow(0 10px 18px rgb(0 0 0 / 24%));
+  pointer-events: none;
   user-select: none;
 }
 
