@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useReducer } from "react";
 import {
   addImage,
   removeImage,
+  reorderBoardImages,
   type AppState,
   type BoardSlot,
   type ColorDeterminedAppState,
@@ -61,6 +62,7 @@ type ImageBoardAction =
 
 const ADD_IMAGE_ERROR = "이미지를 추가하지 못했어요. PNG, JPG, WebP 파일을 사용해주세요.";
 const REMOVE_IMAGE_ERROR = "이미지를 삭제하지 못했어요. 다시 시도해주세요.";
+const REORDER_IMAGE_ERROR = "이미지 위치를 바꾸지 못했어요. 다시 시도해주세요.";
 const DOWNLOAD_ERROR = "보드 이미지를 만들지 못했어요. 다시 시도해주세요.";
 
 const INITIAL_IMAGE_BOARD_INTERACTION_STATE: ImageBoardInteractionState = {
@@ -172,6 +174,37 @@ export function useImageBoardController({
     [currentState, isBoardBusy, persistNextState],
   );
 
+  const reorderImages = useCallback(
+    async (fromIndex: number, toIndex: number) => {
+      if (
+        currentState === null ||
+        isBoardBusy ||
+        fromIndex === toIndex ||
+        currentState.images[fromIndex] === null
+      ) {
+        return false;
+      }
+
+      const nextState = reorderBoardImages(currentState, fromIndex, toIndex);
+
+      if (nextState === currentState || nextState.state !== "COLOR_DETERMINED") {
+        return false;
+      }
+
+      dispatch({ type: "saveStarted" });
+
+      try {
+        await persistNextState(nextState);
+        dispatch({ type: "saveSucceeded" });
+        return true;
+      } catch {
+        dispatch({ error: REORDER_IMAGE_ERROR, type: "saveFailed" });
+        return false;
+      }
+    },
+    [currentState, isBoardBusy, persistNextState],
+  );
+
   const downloadBoard = useCallback(async () => {
     if (currentState === null || filledImageCount === 0 || isBoardBusy) {
       return;
@@ -204,6 +237,7 @@ export function useImageBoardController({
     isInfoOpen: interactionState.isInfoOpen,
     isSavingBoard: interactionState.isSavingBoard,
     openInfo,
+    reorderImages,
     removeSelectedImage,
     selectImage,
     themeTextColor,

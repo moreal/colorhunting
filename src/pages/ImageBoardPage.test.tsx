@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   createColor,
@@ -10,11 +10,19 @@ import {
   type Image,
 } from "../domain/appState";
 import { designTokens } from "../designSystem/tokens";
+import {
+  beginLongPressSlotDrag,
+  dropSlotDragAt,
+  getImageBoardSlotFrames,
+  mockImageBoardSlotRects,
+  moveSlotDragTo,
+} from "../test/imageBoardDrag";
 import { ImageBoardPage, type ExportBoardImage, type TriggerBoardDownload } from "./ImageBoardPage";
 
 describe("ImageBoardPage", () => {
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
   });
 
   it("확정된 색상 상태가 아니면 보드 페이지를 렌더링하지 않는다", () => {
@@ -211,6 +219,101 @@ describe("ImageBoardPage", () => {
       expect(screen.queryByRole("img", { name: "Sample image 1" })).not.toBeInTheDocument(),
     );
     expect(screen.getByRole("img", { name: "Sample image 2" })).toBeInTheDocument();
+  });
+
+  it("이미지 슬롯을 길게 눌러 옮기면 재배치된 보드를 저장한다", async () => {
+    vi.useFakeTimers();
+    const saveBoardState = vi.fn<(state: ColorDeterminedAppState) => Promise<void>>(async () => {});
+    const firstImage = createSampleImage(1);
+    const secondImage = createSampleImage(2);
+    const thirdImage = createSampleImage(3);
+    render(
+      <ControlledImageBoardPage
+        initialState={createBoardState({
+          images: createBoard([
+            [0, firstImage],
+            [1, secondImage],
+            [2, thirdImage],
+          ]),
+        })}
+        saveBoardState={saveBoardState}
+      />,
+    );
+    const slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
+
+    beginLongPressSlotDrag(slotFrames, 0);
+    moveSlotDragTo(slotFrames, 0, 2);
+    dropSlotDragAt(slotFrames, 0, 2);
+    await act(async () => {});
+
+    expect(saveBoardState).toHaveBeenCalledWith(
+      createBoardState({
+        images: createBoard([
+          [0, secondImage],
+          [1, thirdImage],
+          [2, firstImage],
+        ]),
+      }),
+    );
+    expect(screen.getByRole("img", { name: "Sample image 1" })).toBeInTheDocument();
+  });
+
+  it("이미지 슬롯 재배치 저장에 실패하면 원래 보드를 유지하고 오류를 보여준다", async () => {
+    vi.useFakeTimers();
+    const saveBoardState = vi.fn<(state: ColorDeterminedAppState) => Promise<void>>(async () => {
+      throw new Error("storage failed");
+    });
+    const onBoardChange = vi.fn<(state: ColorDeterminedAppState) => void>();
+    const firstImage = createSampleImage(1);
+    const secondImage = createSampleImage(2);
+    render(
+      <ImageBoardPage
+        onBoardChange={onBoardChange}
+        saveBoardState={saveBoardState}
+        state={createBoardState({
+          images: createBoard([
+            [0, firstImage],
+            [1, secondImage],
+          ]),
+        })}
+      />,
+    );
+    const slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
+
+    beginLongPressSlotDrag(slotFrames, 0);
+    moveSlotDragTo(slotFrames, 0, 1);
+    dropSlotDragAt(slotFrames, 0, 1);
+    await act(async () => {});
+
+    expect(saveBoardState).toHaveBeenCalledWith(
+      createBoardState({
+        images: createBoard([
+          [0, secondImage],
+          [1, firstImage],
+        ]),
+      }),
+    );
+    expect(onBoardChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "이미지 위치를 바꾸지 못했어요. 다시 시도해주세요.",
+    );
+    expect(screen.getAllByRole("img").map((image) => image.getAttribute("alt"))).toEqual([
+      "Sample image 1",
+      "Sample image 2",
+    ]);
+    expect(screen.getByRole("group", { name: /Image board/ })).toHaveAttribute(
+      "data-reordering",
+      "returning",
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
+      "data-reordering",
+    );
   });
 
   it("다운로드를 실행하면 보드 Blob을 내려받고 완료 상태를 보여준다", async () => {

@@ -4,11 +4,9 @@ import {
   type BoardSlot,
   type Image as BoardImage,
 } from "./appState";
-import { normalizeHexColor } from "./color";
-import { getColorHuntingThemeTextColor } from "./colorHuntingTheme";
 
 export const BOARD_EXPORT_WIDTH = 3024;
-export const BOARD_EXPORT_HEIGHT = 4032;
+export const BOARD_EXPORT_HEIGHT = 3024;
 export const BOARD_EXPORT_MIME_TYPE = "image/png";
 
 export type BoardExportMimeType = "image/png" | "image/jpeg" | "image/webp";
@@ -20,27 +18,19 @@ export type BoardCanvasExporter = (
   mimeType: BoardExportMimeType,
   quality?: number,
 ) => Promise<Blob>;
-export type BoardFontReady = () => Promise<void>;
 
 export type ComposeBoardImageOptions = {
-  backgroundColor?: string;
-  color?: string;
-  colorLabel?: string;
   createCanvas?: BoardCanvasFactory;
   exportCanvas?: BoardCanvasExporter;
   height?: number;
   loadImage?: BoardImageLoader;
   mimeType?: BoardExportMimeType;
   quality?: number;
-  waitForFonts?: BoardFontReady;
   width?: number;
 };
 
 type BoardExportLayout = {
   cellSize: number;
-  footerHeight: number;
-  gridTop: number;
-  headerHeight: number;
   height: number;
   width: number;
 };
@@ -51,9 +41,6 @@ export async function composeBoardImage(
 ): Promise<Blob> {
   const board = validateBoardImages(images);
   const layout = createBoardExportLayout(options);
-  const themeColor = getThemeColor(options.color);
-  const backgroundColor = getBackgroundColor(options.backgroundColor);
-  const textColor = getColorHuntingThemeTextColor(themeColor);
   const canvas = (options.createCanvas ?? createBrowserCanvas)(layout.width, layout.height);
   const context = canvas.getContext("2d");
 
@@ -63,15 +50,6 @@ export async function composeBoardImage(
 
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
-
-  await (options.waitForFonts ?? waitForBrowserFonts)();
-
-  drawBoardFrame(context, layout, {
-    backgroundColor,
-    colorLabel: options.colorLabel,
-    textColor,
-    themeColor,
-  });
 
   const loadImage = options.loadImage ?? loadBrowserImage;
   const loadedImages = await Promise.all(
@@ -114,54 +92,19 @@ function validateBoardImages(images: readonly BoardSlot[]): BoardSlot[] {
 }
 
 function createBoardExportLayout(options: ComposeBoardImageOptions): BoardExportLayout {
-  const width = options.width ?? BOARD_EXPORT_WIDTH;
-  const height = options.height ?? BOARD_EXPORT_HEIGHT;
+  const size = options.width ?? options.height ?? BOARD_EXPORT_WIDTH;
+  const width = options.width ?? size;
+  const height = options.height ?? size;
 
-  if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= width) {
-    throw new Error("Board export dimensions must be positive integers with a 3:4-like shape.");
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height !== width) {
+    throw new Error("Board export dimensions must be positive square integers.");
   }
-
-  const remainingHeight = height - width;
-  const headerHeight = Math.round(remainingHeight * 0.67);
-  const footerHeight = remainingHeight - headerHeight;
 
   return {
     cellSize: width / 3,
-    footerHeight,
-    gridTop: headerHeight,
-    headerHeight,
     height,
     width,
   };
-}
-
-function drawBoardFrame(
-  context: CanvasRenderingContext2D,
-  layout: BoardExportLayout,
-  options: {
-    backgroundColor: string;
-    colorLabel: string | undefined;
-    textColor: string;
-    themeColor: string;
-  },
-) {
-  context.fillStyle = options.backgroundColor;
-  context.fillRect(0, 0, layout.width, layout.height);
-
-  context.fillStyle = options.themeColor;
-  context.fillRect(0, 0, layout.width, layout.headerHeight);
-  context.fillRect(0, layout.gridTop + layout.width, layout.width, layout.footerHeight);
-
-  context.fillStyle = options.textColor;
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.font = '700 124px "Press Start 2P", "NeoDunggeunmo Pro", ui-monospace, monospace';
-  context.fillText("COLOR*HUNTING", layout.width / 2, layout.headerHeight * 0.42);
-
-  if (options.colorLabel) {
-    context.font = '400 84px "NeoDunggeunmo Pro", "Press Start 2P", ui-monospace, monospace';
-    context.fillText(options.colorLabel, layout.width / 2, layout.headerHeight * 0.72);
-  }
 }
 
 function drawBoardSlots(
@@ -173,7 +116,7 @@ function drawBoardSlots(
     const column = slotIndex % 3;
     const row = Math.floor(slotIndex / 3);
     const x = column * layout.cellSize;
-    const y = layout.gridTop + row * layout.cellSize;
+    const y = row * layout.cellSize;
     const image = images[slotIndex];
 
     drawEmptySlot(context, x, y, layout.cellSize);
@@ -244,26 +187,6 @@ function getImageSourceSize(image: CanvasImageSource): {
   return { height, width };
 }
 
-function getThemeColor(color: string | undefined): string {
-  const themeColor = normalizeHexColor(color ?? "#ef4b4b");
-
-  if (themeColor === null) {
-    throw new Error("Board export color must be a valid hex color.");
-  }
-
-  return themeColor;
-}
-
-function getBackgroundColor(color: string | undefined): string {
-  const backgroundColor = normalizeHexColor(color ?? "#ffffff");
-
-  if (backgroundColor === null) {
-    throw new Error("Board export background color must be a valid hex color.");
-  }
-
-  return backgroundColor;
-}
-
 function createBrowserCanvas(width: number, height: number): HTMLCanvasElement {
   if (typeof document === "undefined") {
     throw new Error("Board export requires a browser document.");
@@ -274,14 +197,6 @@ function createBrowserCanvas(width: number, height: number): HTMLCanvasElement {
   canvas.height = height;
 
   return canvas;
-}
-
-async function waitForBrowserFonts(): Promise<void> {
-  if (typeof document === "undefined" || !("fonts" in document)) {
-    return;
-  }
-
-  await document.fonts.ready;
 }
 
 function loadBrowserImage(image: BoardImage): Promise<CanvasImageSource> {

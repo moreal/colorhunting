@@ -1,9 +1,22 @@
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Image } from "../domain/appState";
 import { designTokens } from "../designSystem/tokens";
+import {
+  beginLongPressSlotDrag,
+  cancelSlotDrag,
+  dropSlotDragAt,
+  dropSlotDragOutside,
+  getImageBoardSlotFrames,
+  getImageBoardSlotGroups,
+  mockImageBoardSlotRects,
+  movePressedSlotBy,
+  moveSlotDragOutside,
+  moveSlotDragTo,
+  startSlotPress,
+} from "../test/imageBoardDrag";
 import { BottomActionBar } from "./BottomActionBar";
 import { CloseButton } from "./CloseButton";
 import { ColorCard } from "./ColorCard";
@@ -21,6 +34,7 @@ import { ResetButton } from "./ResetButton";
 describe("design system components", () => {
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
   });
 
   it("로고는 홈 링크로 읽히는 제품 이름을 제공한다", () => {
@@ -285,6 +299,155 @@ describe("design system components", () => {
     const slots = within(board).getAllByRole("group");
 
     expect(slots).toHaveLength(9);
+    expect(getImageBoardSlotFrames()[0]).not.toHaveAttribute("data-draggable");
+    expect(screen.queryByRole("button", { name: /Move image in slot/ })).not.toBeInTheDocument();
+  });
+
+  it("이미지 보드는 길게 누른 슬롯을 다른 슬롯 위치로 옮기도록 요청한다", async () => {
+    vi.useFakeTimers();
+    const onReorderImages = vi.fn<(fromIndex: number, toIndex: number) => boolean>(() => true);
+    render(
+      <ImageBoard
+        images={[createSampleImage(1), createSampleImage(2), createSampleImage(3)]}
+        onReorderImages={onReorderImages}
+      />,
+    );
+    const slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
+
+    beginLongPressSlotDrag(slotFrames, 0);
+    moveSlotDragTo(slotFrames, 0, 2);
+
+    expect(
+      within(getImageBoardSlotGroups()[0]).getByRole("img", { name: "Sample image 2" }),
+    ).toBeInTheDocument();
+    expect(getImageBoardSlotFrames()[2]).toHaveAttribute("data-drag-state", "dragging");
+
+    dropSlotDragAt(slotFrames, 0, 2);
+    await act(async () => {});
+
+    expect(onReorderImages).toHaveBeenCalledWith(0, 2);
+    expect(screen.getByRole("group", { name: /Image board/ })).toHaveAttribute(
+      "data-reordering",
+      "settling",
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
+      "data-reordering",
+    );
+  });
+
+  it("이미지 보드는 보드 슬롯 밖에서 드래그를 끝내면 재배치를 요청하지 않고 원래 순서로 복구한다", () => {
+    vi.useFakeTimers();
+    const onReorderImages = vi.fn<(fromIndex: number, toIndex: number) => boolean>(() => true);
+    render(
+      <ImageBoard
+        images={[createSampleImage(1), createSampleImage(2), createSampleImage(3)]}
+        onReorderImages={onReorderImages}
+      />,
+    );
+    const slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
+
+    beginLongPressSlotDrag(slotFrames, 0);
+    moveSlotDragTo(slotFrames, 0, 2);
+    moveSlotDragOutside(slotFrames, 0);
+    dropSlotDragOutside(slotFrames, 0);
+
+    expect(onReorderImages).not.toHaveBeenCalled();
+    expect(
+      within(getImageBoardSlotGroups()[0]).getByRole("img", { name: "Sample image 1" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: /Image board/ })).toHaveAttribute(
+      "data-reordering",
+      "returning",
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
+      "data-reordering",
+    );
+  });
+
+  it("이미지 보드는 길게 누르기 전에 놓거나 움직이면 재배치를 시작하지 않는다", () => {
+    vi.useFakeTimers();
+    const onReorderImages = vi.fn<(fromIndex: number, toIndex: number) => boolean>(() => true);
+    render(
+      <ImageBoard
+        images={[createSampleImage(1), createSampleImage(2)]}
+        onReorderImages={onReorderImages}
+      />,
+    );
+    const slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
+
+    startSlotPress(slotFrames, 0);
+    dropSlotDragAt(slotFrames, 0, 1);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    expect(onReorderImages).not.toHaveBeenCalled();
+    expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
+      "data-reordering",
+    );
+
+    startSlotPress(slotFrames, 0);
+    movePressedSlotBy(slotFrames, 0, 20, 0);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    dropSlotDragAt(slotFrames, 0, 1);
+    expect(onReorderImages).not.toHaveBeenCalled();
+  });
+
+  it("이미지 보드는 pointer cancel이 발생하면 저장하지 않고 원래 순서로 복구한다", () => {
+    vi.useFakeTimers();
+    const onReorderImages = vi.fn<(fromIndex: number, toIndex: number) => boolean>(() => true);
+    render(
+      <ImageBoard
+        images={[createSampleImage(1), createSampleImage(2), createSampleImage(3)]}
+        onReorderImages={onReorderImages}
+      />,
+    );
+    const slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
+
+    beginLongPressSlotDrag(slotFrames, 0);
+    moveSlotDragTo(slotFrames, 0, 2);
+    cancelSlotDrag(slotFrames, 0);
+
+    expect(onReorderImages).not.toHaveBeenCalled();
+    expect(
+      within(getImageBoardSlotGroups()[0]).getByRole("img", { name: "Sample image 1" }),
+    ).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
+      "data-reordering",
+    );
+  });
+
+  it("이미지 보드는 키보드로 이미지 위치를 한 칸씩 옮기도록 요청한다", async () => {
+    const user = userEvent.setup();
+    const onReorderImages = vi.fn<(fromIndex: number, toIndex: number) => boolean>(() => true);
+    render(
+      <ImageBoard
+        images={[createSampleImage(1), createSampleImage(2)]}
+        onReorderImages={onReorderImages}
+      />,
+    );
+
+    screen.getByRole("button", { name: "Move image in slot 1 forward" }).focus();
+    await user.keyboard("{Enter}");
+
+    expect(onReorderImages).toHaveBeenCalledWith(0, 1);
   });
 
   it("하단 액션 바는 툴바 역할과 이름으로 액션 묶음을 표현한다", () => {

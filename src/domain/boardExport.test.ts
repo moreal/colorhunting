@@ -8,7 +8,7 @@ import {
 } from "./boardExport";
 
 describe("boardExport", () => {
-  it("부분적으로 채운 보드를 3대4 PNG 이미지로 합성한다", async () => {
+  it("부분적으로 채운 보드를 컴팩트한 3x3 PNG 이미지로 합성한다", async () => {
     const image = createSampleImage(1);
     const board = createBoard([[0, image]]);
     const { canvas, context, createCanvas } = createFakeCanvas();
@@ -17,8 +17,6 @@ describe("boardExport", () => {
     );
 
     const blob = await composeBoardImage(board, {
-      color: "#ef4b4b",
-      colorLabel: "RED",
       createCanvas,
       loadImage,
     });
@@ -28,12 +26,7 @@ describe("boardExport", () => {
     expect(canvas.height).toBe(BOARD_EXPORT_HEIGHT);
     expect(loadImage).toHaveBeenCalledWith(image);
     expect(context.drawImage).toHaveBeenCalledOnce();
-    expect(context.fillText).toHaveBeenCalledWith(
-      "COLOR*HUNTING",
-      expect.any(Number),
-      expect.any(Number),
-    );
-    expect(context.fillText).toHaveBeenCalledWith("RED", expect.any(Number), expect.any(Number));
+    expect(context.fillText).not.toHaveBeenCalled();
     expect(blob.type).toBe(BOARD_EXPORT_MIME_TYPE);
   });
 
@@ -62,13 +55,12 @@ describe("boardExport", () => {
 
     await composeBoardImage(board, {
       createCanvas,
-      height: 400,
+      height: 300,
       loadImage: vi.fn<() => Promise<CanvasImageSource>>(async () => loadedImage),
-      waitForFonts: vi.fn<() => Promise<void>>(async () => {}),
       width: 300,
     });
 
-    expect(context.fillRect).toHaveBeenCalledWith(0, 67, 100, 100);
+    expect(context.fillRect).toHaveBeenCalledWith(0, 0, 100, 100);
     expect(context.drawImage).toHaveBeenCalledWith(
       loadedImage,
       50,
@@ -76,56 +68,10 @@ describe("boardExport", () => {
       100,
       100,
       100,
-      167,
+      100,
       100,
       100,
     );
-  });
-
-  it("글자를 그리기 전에 폰트 로딩을 기다린다", async () => {
-    const { createCanvas } = createFakeCanvas();
-    const waitForFonts = vi.fn<() => Promise<void>>(async () => {});
-
-    await composeBoardImage(createBoard([[0, createSampleImage(1)]]), {
-      createCanvas,
-      loadImage: vi.fn<() => Promise<CanvasImageSource>>(
-        async () => ({ height: 100, width: 100 }) as CanvasImageSource,
-      ),
-      waitForFonts,
-    });
-
-    expect(waitForFonts).toHaveBeenCalledOnce();
-  });
-
-  it("내보낸 보드의 테마 텍스트는 노란색만 검정색으로 그린다", async () => {
-    const redExport = createFakeCanvas();
-    const yellowExport = createFakeCanvas();
-    const options = {
-      loadImage: vi.fn<() => Promise<CanvasImageSource>>(
-        async () => ({ height: 100, width: 100 }) as CanvasImageSource,
-      ),
-      waitForFonts: vi.fn<() => Promise<void>>(async () => {}),
-    };
-
-    await composeBoardImage(createBoard([[0, createSampleImage(1)]]), {
-      ...options,
-      color: "#ef4b4b",
-      colorLabel: "RED",
-      createCanvas: redExport.createCanvas,
-    });
-    await composeBoardImage(createBoard([[0, createSampleImage(1)]]), {
-      ...options,
-      color: "#ffe44b",
-      colorLabel: "YELLOW",
-      createCanvas: yellowExport.createCanvas,
-    });
-
-    expect(redExport.textDraws.find((draw) => draw.text === "RED")).toMatchObject({
-      fillStyle: "#ffffff",
-    });
-    expect(yellowExport.textDraws.find((draw) => draw.text === "YELLOW")).toMatchObject({
-      fillStyle: "#000000",
-    });
   });
 
   it("빈 보드는 다운로드 이미지로 만들지 않는다", async () => {
@@ -143,19 +89,13 @@ describe("boardExport", () => {
     ).rejects.toThrow("A board export contains an invalid image slot.");
   });
 
-  it("잘못된 export 옵션과 그릴 수 없는 이미지는 거부한다", async () => {
+  it("잘못된 export 크기와 그릴 수 없는 이미지는 거부한다", async () => {
     const board = createBoard([[0, createSampleImage(1)]]);
     const { createCanvas } = createFakeCanvas();
 
-    await expect(composeBoardImage(board, { color: "red", createCanvas })).rejects.toThrow(
-      "Board export color must be a valid hex color.",
-    );
     await expect(
-      composeBoardImage(board, { backgroundColor: "white", createCanvas }),
-    ).rejects.toThrow("Board export background color must be a valid hex color.");
-    await expect(
-      composeBoardImage(board, { createCanvas, height: 300, width: 300 }),
-    ).rejects.toThrow("Board export dimensions must be positive integers with a 3:4-like shape.");
+      composeBoardImage(board, { createCanvas, height: 400, width: 300 }),
+    ).rejects.toThrow("Board export dimensions must be positive square integers.");
     await expect(
       composeBoardImage(board, {
         createCanvas,

@@ -125,6 +125,55 @@ export function removeImage(state: AppState, slotIndex: number): AppState {
   };
 }
 
+export function moveBoardSlot(
+  images: readonly BoardSlot[],
+  fromIndex: number,
+  toIndex: number,
+): Board | null {
+  if (!isValidSlotIndex(fromIndex) || !isValidSlotIndex(toIndex)) {
+    return null;
+  }
+
+  const nextImages = parseBoard(images);
+
+  if (nextImages === null) {
+    return null;
+  }
+
+  if (fromIndex === toIndex || nextImages[fromIndex] === null) {
+    return nextImages;
+  }
+
+  const movedImage = nextImages[fromIndex];
+  nextImages.splice(fromIndex, 1);
+  nextImages.splice(toIndex, 0, movedImage);
+
+  return nextImages as Board;
+}
+
+export function reorderBoardImages(state: AppState, fromIndex: number, toIndex: number): AppState {
+  if (
+    state.state !== "COLOR_DETERMINED" ||
+    !isValidSlotIndex(fromIndex) ||
+    !isValidSlotIndex(toIndex) ||
+    fromIndex === toIndex ||
+    state.images[fromIndex] === null
+  ) {
+    return state;
+  }
+
+  const nextImages = moveBoardSlot(state.images, fromIndex, toIndex);
+
+  if (nextImages === null) {
+    return state;
+  }
+
+  return {
+    ...state,
+    images: nextImages,
+  };
+}
+
 export function replaceBoard(state: AppState, images: readonly BoardSlot[]): AppState {
   if (state.state !== "COLOR_DETERMINED") {
     return state;

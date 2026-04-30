@@ -56,6 +56,7 @@ export function ImageBoardPage({
     isInfoOpen,
     isSavingBoard,
     openInfo,
+    reorderImages,
     removeSelectedImage,
     selectImage,
     themeTextColor,
@@ -117,6 +118,7 @@ export function ImageBoardPage({
             images={currentState.images}
             onImageSelect={(slotIndex, file) => void selectImage(slotIndex, file)}
             onRemoveImage={(slotIndex) => void removeSelectedImage(slotIndex)}
+            onReorderImages={reorderImages}
             variant="poster"
           />
           {boardError ? (
@@ -159,9 +161,9 @@ type ImageBoardPageStyle = CSSProperties & {
 
 async function defaultExportBoardImage(
   images: readonly BoardSlot[],
-  descriptor: BoardExportDescriptor,
+  _descriptor: BoardExportDescriptor,
 ): Promise<Blob> {
-  return await composeBoardImage(images, descriptor);
+  return await composeBoardImage(images);
 }
 
 function triggerBoardDownload(blob: Blob, fileName: string) {

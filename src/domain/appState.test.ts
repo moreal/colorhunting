@@ -7,6 +7,8 @@ import {
   createEmptyBoard,
   createImage,
   hasValidBoardLength,
+  moveBoardSlot,
+  reorderBoardImages,
   removeImage,
   replaceBoard,
   resetToNoColor,
@@ -32,6 +34,14 @@ const secondTestImage: Image = {
   mimeType: "image/png",
   dataUrl: "data:image/png;base64,def456",
   altText: "Second image",
+};
+
+const thirdTestImage: Image = {
+  id: "image-3",
+  name: "third.png",
+  mimeType: "image/png",
+  dataUrl: "data:image/png;base64,ghi789",
+  altText: "Third image",
 };
 
 describe("appState", () => {
@@ -141,6 +151,88 @@ describe("appState", () => {
     });
     expect(replaceBoard(state, [testImage])).toBe(state);
     expect(replaceBoard(resetToNoColor(), nextBoard)).toEqual(resetToNoColor());
+  });
+
+  it("이미지 슬롯을 대상 위치로 옮기고 사이 슬롯을 밀어낸다", () => {
+    const board = boardWithImages([
+      [0, testImage],
+      [1, secondTestImage],
+      [2, thirdTestImage],
+    ]);
+
+    expect(moveBoardSlot(board, 0, 2)).toEqual(
+      boardWithImages([
+        [0, secondTestImage],
+        [1, thirdTestImage],
+        [2, testImage],
+      ]),
+    );
+    expect(moveBoardSlot(board, 2, 0)).toEqual(
+      boardWithImages([
+        [0, thirdTestImage],
+        [1, testImage],
+        [2, secondTestImage],
+      ]),
+    );
+    expect(board).toEqual(
+      boardWithImages([
+        [0, testImage],
+        [1, secondTestImage],
+        [2, thirdTestImage],
+      ]),
+    );
+  });
+
+  it("이동할 이미지가 없거나 대상이 유효하지 않으면 보드 이동을 거부한다", () => {
+    const board = boardWithImages([[1, testImage]]);
+
+    expect(moveBoardSlot(board, 0, 2)).toEqual(board);
+    expect(moveBoardSlot(board, 1, 1)).toEqual(board);
+    expect(moveBoardSlot(board, -1, 2)).toBeNull();
+    expect(moveBoardSlot(board, 1, BOARD_SLOT_COUNT)).toBeNull();
+    expect(moveBoardSlot([testImage], 0, 1)).toBeNull();
+  });
+
+  it("이미지 슬롯은 비어 있는 칸을 지나서도 같은 삽입 규칙으로 이동한다", () => {
+    const board = boardWithImages([
+      [1, testImage],
+      [5, secondTestImage],
+    ]);
+
+    expect(moveBoardSlot(board, 5, 1)).toEqual(
+      boardWithImages([
+        [1, secondTestImage],
+        [2, testImage],
+      ]),
+    );
+    expect(moveBoardSlot(board, 1, 7)).toEqual(
+      boardWithImages([
+        [4, secondTestImage],
+        [7, testImage],
+      ]),
+    );
+  });
+
+  it("색상 결정 상태의 이미지 보드 순서를 도메인 mutation으로 교체한다", () => {
+    const state = replaceBoard(
+      selectColor(createColor("#0000ff")!),
+      boardWithImages([
+        [0, testImage],
+        [2, secondTestImage],
+      ]),
+    );
+
+    const movedState = reorderBoardImages(state, 0, 2);
+
+    assertColorDetermined(movedState);
+    expect(movedState.images).toEqual(
+      boardWithImages([
+        [1, secondTestImage],
+        [2, testImage],
+      ]),
+    );
+    expect(reorderBoardImages(state, 1, 2)).toBe(state);
+    expect(reorderBoardImages(resetToNoColor(), 0, 2)).toEqual(resetToNoColor());
   });
 
   it("저장된 상태는 유효한 색상과 정확히 9개의 이미지 슬롯이 있을 때만 받아들인다", () => {
