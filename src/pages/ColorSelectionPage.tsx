@@ -59,7 +59,7 @@ export function ColorSelectionPage({
     >
       <section className="ds-mobile-app-frame color-selection-panel">
         <header className="color-selection-header">
-          <Logo className="color-selection-logo" />
+          <Logo className="color-selection-logo" inert />
           <InfoButton
             className="color-selection-info-button"
             label="컬러헌팅 정보 열기"

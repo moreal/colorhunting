@@ -210,7 +210,7 @@ describe("design system components", () => {
     expect(designTokens.component.colorSelection).toMatchObject({
       cardFlipDurationSeconds: 0.16,
       copyFontSize: "20px",
-      logoHeight: "39px",
+      logoHeight: "69px",
       logoWidth: "337px",
     });
     expect(designTokens.color.colorCard).toEqual({

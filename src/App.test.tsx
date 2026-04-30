@@ -15,6 +15,7 @@ import { designTokens } from "./designSystem/tokens";
 describe("App", () => {
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
   });
 
   it("저장된 상태를 읽는 동안 선택 화면을 먼저 보여주지 않는다", () => {
@@ -160,18 +161,22 @@ describe("App", () => {
     expect(storage.saveAppState).toHaveBeenCalledWith(createBoardState());
   });
 
-  it("로고를 누르면 저장된 보드를 지우고 색상 선택으로 돌아간다", async () => {
+  it("로고를 누르면 저장된 보드를 지우고 현재 색상으로 색상 선택에 돌아간다", async () => {
     const user = userEvent.setup();
-    const storage = createMemoryStorage({ initialState: createBoardState() });
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+    const storage = createMemoryStorage({
+      initialState: createBoardState({ color: designTokens.color.colorCard.blue }),
+    });
     render(<App storage={storage} />);
 
-    await user.click(
-      await screen.findByRole("link", { name: "Reset board and choose a new color" }),
-    );
+    await user.click(await screen.findByRole("button", { name: "Choose current color again" }));
 
     expect(storage.clearAppState).toHaveBeenCalledOnce();
     expect(await screen.findByRole("button", { name: "Confirm" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "BLUE #76d1ff" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "DOWNLOAD" })).not.toBeInTheDocument();
+    expect(randomSpy).not.toHaveBeenCalled();
+    randomSpy.mockRestore();
   });
 
   it("보드 초기화 저장에 실패하면 현재 보드를 유지하고 오류를 보여준다", async () => {
@@ -184,9 +189,7 @@ describe("App", () => {
     });
     render(<App storage={storage} />);
 
-    await user.click(
-      await screen.findByRole("link", { name: "Reset board and choose a new color" }),
-    );
+    await user.click(await screen.findByRole("button", { name: "Choose current color again" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "저장된 보드를 지우지 못했어요. 다시 시도해주세요.",
@@ -231,8 +234,13 @@ function createMemoryStorage(options: MemoryStorageOptions = {}): AppStateStorag
   };
 }
 
-function createBoardState(images: Board = createEmptyBoard()): ColorDeterminedAppState {
-  const color = createColor(designTokens.color.colorCard.red);
+function createBoardState(
+  options: {
+    color?: string;
+    images?: Board;
+  } = {},
+): ColorDeterminedAppState {
+  const color = createColor(options.color ?? designTokens.color.colorCard.red);
 
   if (color === null) {
     throw new Error("Test color must be valid.");
@@ -240,7 +248,7 @@ function createBoardState(images: Board = createEmptyBoard()): ColorDeterminedAp
 
   return {
     color,
-    images,
+    images: options.images ?? createEmptyBoard(),
     state: "COLOR_DETERMINED",
   };
 }

@@ -20,14 +20,17 @@ describe("ColorSelectionPage", () => {
   });
 
   it("선택된 색상과 화면 설계서의 기본 액션을 보여준다", () => {
-    render(
+    const { container } = render(
       <ColorSelectionPage
         initialColor={redOption}
         saveConfirmedState={vi.fn<() => Promise<void>>()}
       />,
     );
+    const logo = container.querySelector(".color-selection-logo");
 
-    expect(screen.getByRole("link", { name: "Colorhunting home" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Colorhunting home" })).not.toBeInTheDocument();
+    expect(logo).toBeInTheDocument();
+    expect(logo).toHaveAttribute("aria-hidden", "true");
     expect(screen.getByText(/오늘의 컬러를 발견하고/)).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "RED #ef4b4b" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Reset" })).toBeEnabled();
@@ -143,7 +146,15 @@ describe("ColorSelectionPage", () => {
     await user.click(opener);
 
     expect(screen.getByRole("dialog", { name: "컬러헌팅(Color Hunting)" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "컬러헌팅 정보 닫기" })).toHaveFocus();
+    const closeButton = screen.getByRole("button", { name: "컬러헌팅 정보 닫기" });
+    const closeButtonStyle = window.getComputedStyle(closeButton);
+    expect(closeButton).toHaveFocus();
+    expect([
+      closeButtonStyle.borderTopWidth,
+      closeButtonStyle.borderRightWidth,
+      closeButtonStyle.borderBottomWidth,
+      closeButtonStyle.borderLeftWidth,
+    ]).toEqual(["0px", "0px", "0px", "0px"]);
 
     await user.click(screen.getByRole("button", { name: "컬러헌팅 정보 닫기" }));
 

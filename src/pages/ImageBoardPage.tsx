@@ -1,4 +1,4 @@
-import { useCallback, type CSSProperties, type MouseEvent } from "react";
+import { useCallback, type CSSProperties } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import type { AppState, BoardSlot, ColorDeterminedAppState } from "../domain/appState";
 import { composeBoardImage } from "../domain/boardExport";
@@ -28,7 +28,7 @@ export type ImageBoardPageProps = {
   createImageFromFile?: CreateImageFromFile;
   exportBoardImage?: ExportBoardImage;
   onBoardChange?: (state: ColorDeterminedAppState) => void;
-  onResetFlow?: () => void;
+  onResetFlow?: (state: ColorDeterminedAppState) => void;
   saveBoardState?: SaveBoardState;
   state: AppState;
   triggerDownload?: TriggerBoardDownload;
@@ -68,17 +68,13 @@ export function ImageBoardPage({
     triggerDownload,
   });
 
-  const handleLogoClick = useCallback(
-    (event: MouseEvent<HTMLAnchorElement>) => {
-      if (onResetFlow === undefined) {
-        return;
-      }
+  const handleLogoClick = useCallback(() => {
+    if (onResetFlow === undefined || currentState === null) {
+      return;
+    }
 
-      event.preventDefault();
-      onResetFlow();
-    },
-    [onResetFlow],
-  );
+    onResetFlow(currentState);
+  }, [currentState, onResetFlow]);
 
   if (currentState === null) {
     return null;
@@ -98,7 +94,8 @@ export function ImageBoardPage({
       <section className="ds-mobile-app-frame image-board-shell">
         <header className="image-board-header">
           <Logo
-            aria-label="Reset board and choose a new color"
+            as="button"
+            aria-label="Choose current color again"
             className="image-board-logo"
             onClick={handleLogoClick}
           />

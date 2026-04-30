@@ -58,7 +58,7 @@ export const designTokens = {
       copyLineHeight: "1.5",
       infoButtonRight: "16px",
       infoButtonTop: "64px",
-      logoHeight: "39px",
+      logoHeight: "69px",
       logoWidth: "337px",
       panelMinHeight: "844px",
       panelPaddingBottom: "72px",

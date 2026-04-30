@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { resetToNoColor, type AppState, type ColorDeterminedAppState } from "./domain/appState";
+import { findColorSelectionOption, type ColorSelectionOption } from "./domain/colorSelection";
 import { createAppStateStorage, type AppStateStorage } from "./appStorage";
 import { ColorSelectionPage, ImageBoardPage } from "./pages";
 import "./App.css";
@@ -17,6 +18,9 @@ export default function App({ storage: providedStorage }: AppProps) {
   const storage = useMemo(() => providedStorage ?? createAppStateStorage(), [providedStorage]);
   const shouldReduceMotion = useReducedMotion();
   const [loadState, setLoadState] = useState<AppLoadState>({ status: "loading" });
+  const [initialSelectionColor, setInitialSelectionColor] = useState<
+    ColorSelectionOption | undefined
+  >();
 
   useEffect(() => {
     let isActive = true;
@@ -62,6 +66,7 @@ export default function App({ storage: providedStorage }: AppProps) {
   );
 
   const handleColorConfirmed = useCallback((nextState: ColorDeterminedAppState) => {
+    setInitialSelectionColor(undefined);
     setLoadState({ appState: nextState, message: null, status: "ready" });
   }, []);
 
@@ -69,21 +74,25 @@ export default function App({ storage: providedStorage }: AppProps) {
     setLoadState({ appState: nextState, message: null, status: "ready" });
   }, []);
 
-  const resetFlow = useCallback(async () => {
-    try {
-      await storage.clearAppState();
-      setLoadState({ appState: resetToNoColor(), message: null, status: "ready" });
-    } catch {
-      setLoadState((currentState) =>
-        currentState.status === "ready"
-          ? {
-              ...currentState,
-              message: "저장된 보드를 지우지 못했어요. 다시 시도해주세요.",
-            }
-          : currentState,
-      );
-    }
-  }, [storage]);
+  const resetFlow = useCallback(
+    async (currentState: ColorDeterminedAppState) => {
+      try {
+        await storage.clearAppState();
+        setInitialSelectionColor(findColorSelectionOption(currentState.color) ?? undefined);
+        setLoadState({ appState: resetToNoColor(), message: null, status: "ready" });
+      } catch {
+        setLoadState((state) =>
+          state.status === "ready"
+            ? {
+                ...state,
+                message: "저장된 보드를 지우지 못했어요. 다시 시도해주세요.",
+              }
+            : state,
+        );
+      }
+    },
+    [storage],
+  );
 
   if (loadState.status === "loading") {
     return (
@@ -114,13 +123,14 @@ export default function App({ storage: providedStorage }: AppProps) {
         >
           {isColorSelection ? (
             <ColorSelectionPage
+              initialColor={initialSelectionColor}
               onColorConfirmed={handleColorConfirmed}
               saveConfirmedState={saveColorDeterminedState}
             />
           ) : (
             <ImageBoardPage
               onBoardChange={handleBoardChange}
-              onResetFlow={() => void resetFlow()}
+              onResetFlow={(state) => void resetFlow(state)}
               saveBoardState={saveColorDeterminedState}
               state={appState}
             />

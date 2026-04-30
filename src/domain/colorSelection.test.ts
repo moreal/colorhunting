@@ -3,6 +3,7 @@ import { createEmptyBoard } from "./appState";
 import {
   COLOR_SELECTION_OPTIONS,
   createConfirmedColorState,
+  findColorSelectionOption,
   getColorSelectionConfirmTextColor,
   pickRandomColorOption,
 } from "./colorSelection";
@@ -51,6 +52,14 @@ describe("colorSelection", () => {
       images: createEmptyBoard(),
       state: "COLOR_DETERMINED",
     });
+  });
+
+  it("확정된 앱 색상에서 선택 옵션을 다시 찾는다", () => {
+    expect(findColorSelectionOption({ hex: "#EF4B4B" })).toMatchObject({
+      color: { hex: "#ef4b4b" },
+      label: "RED",
+    });
+    expect(findColorSelectionOption({ hex: "#123456" })).toBeNull();
   });
 
   it("확정 버튼 텍스트 색상은 노란색만 검정색을 사용한다", () => {

@@ -16,7 +16,7 @@ export const CloseButton = forwardRef<HTMLButtonElement, CloseButtonProps>(funct
   return (
     <button
       aria-label={label}
-      className={classNames("ds-icon-button", className)}
+      className={classNames("ds-icon-button ds-close-button", className)}
       ref={ref}
       type="button"
       {...buttonProps}

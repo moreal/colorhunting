@@ -1,4 +1,3 @@
-.app-loading,
 .app-status-message {
   width: min(100%, 390px);
   margin: 0 auto;
@@ -9,9 +8,17 @@
 }
 
 .app-loading {
+  width: 100%;
   min-height: 100dvh;
+  box-sizing: border-box;
   display: grid;
   place-items: center;
+  margin: 0;
+  background: #f0f1f5;
+  padding: var(--ds-mobile-app-page-padding, 24px);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
 }
 
 .app-status-message {

@@ -40,6 +40,14 @@ export function createConfirmedColorState(option: ColorSelectionOption): ColorDe
   return selectColor(option.color);
 }
 
+export function findColorSelectionOption(color: Color): ColorSelectionOption | null {
+  return (
+    COLOR_SELECTION_OPTIONS.find(
+      (option) => option.color.hex.toLowerCase() === color.hex.toLowerCase(),
+    ) ?? null
+  );
+}
+
 export function getColorSelectionConfirmTextColor(option: ColorSelectionOption): string {
   return getColorHuntingThemeTextColor(option.color.hex);
 }

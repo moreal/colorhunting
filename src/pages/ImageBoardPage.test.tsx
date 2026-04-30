@@ -36,6 +36,22 @@ describe("ImageBoardPage", () => {
     expect(screen.getByText("아직 비어있어요...")).toBeVisible();
   });
 
+  it("로고 버튼은 현재 보드 상태로 색상 선택 복귀를 요청한다", async () => {
+    const user = userEvent.setup();
+    const onResetFlow = vi.fn<(state: ColorDeterminedAppState) => void>();
+    const state = createBoardState({
+      color: designTokens.color.colorCard.blue,
+    });
+    render(<ImageBoardPage onResetFlow={onResetFlow} state={state} />);
+
+    await user.click(screen.getByRole("button", { name: "Choose current color again" }));
+
+    expect(onResetFlow).toHaveBeenCalledWith(state);
+    expect(
+      screen.queryByRole("link", { name: "Choose current color again" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("부분적으로 채운 보드는 다운로드를 활성화한다", () => {
     render(
       <ImageBoardPage
