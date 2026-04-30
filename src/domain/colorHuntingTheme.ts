@@ -1,9 +1,20 @@
 import { normalizeHexColor } from "./color";
-import { designTokens } from "./designSystem/tokens";
 
 const DARK_THEME_TEXT_COLOR = "#000000";
 const LIGHT_THEME_TEXT_COLOR = "#ffffff";
-const YELLOW_THEME_COLOR = normalizeRequiredHexColor(designTokens.color.colorCard.yellow);
+
+export const COLOR_HUNTING_COLOR_HEX = {
+  pink: "#FEB9DE",
+  purple: "#AE7BFF",
+  navy: "#000080",
+  blue: "#76D1FF",
+  green: "#34C759",
+  yellow: "#FFE44B",
+  orange: "#FE931B",
+  red: "#EF4B4B",
+} as const;
+
+const YELLOW_THEME_COLOR = normalizeRequiredHexColor(COLOR_HUNTING_COLOR_HEX.yellow);
 
 export function getColorHuntingThemeTextColor(
   input: string,

@@ -8,7 +8,7 @@ import {
   type Board,
   type ColorDeterminedAppState,
   type Image,
-} from "../appState";
+} from "../domain/appState";
 import { designTokens } from "../designSystem/tokens";
 import { ImageBoardPage, type ExportBoardImage, type TriggerBoardDownload } from "./ImageBoardPage";
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { Image } from "../appState";
+import type { Image } from "../domain/appState";
 import { designTokens } from "../designSystem/tokens";
 import { BottomActionBar } from "./BottomActionBar";
 import { CloseButton } from "./CloseButton";

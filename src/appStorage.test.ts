@@ -6,7 +6,7 @@ import {
   selectColor,
   type AppState,
   type Image,
-} from "./appState";
+} from "./domain/appState";
 import {
   APP_STATE_DATABASE_NAME,
   APP_STATE_STORAGE_KEY,

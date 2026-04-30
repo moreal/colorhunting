@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { resetToNoColor, type AppState, type ColorDeterminedAppState } from "./appState";
+import { resetToNoColor, type AppState, type ColorDeterminedAppState } from "./domain/appState";
 import { createAppStateStorage, type AppStateStorage } from "./appStorage";
 import { ColorSelectionPage, ImageBoardPage } from "./pages";
 import "./App.css";

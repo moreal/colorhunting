@@ -7,7 +7,7 @@ import {
   type AppState,
   type Board,
   type ColorDeterminedAppState,
-} from "./appState";
+} from "./domain/appState";
 import type { AppStateStorage } from "./appStorage";
 import App from "./App";
 import { designTokens } from "./designSystem/tokens";

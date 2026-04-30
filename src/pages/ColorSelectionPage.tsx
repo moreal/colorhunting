@@ -1,22 +1,24 @@
-import { useCallback, useMemo, useState, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { createColor, selectColor, type Color, type ColorDeterminedAppState } from "../appState";
-import { getColorHuntingThemeTextColor } from "../colorHuntingTheme";
+import type { ColorDeterminedAppState } from "../domain/appState";
+import {
+  pickRandomColorOption,
+  type ColorSelectionOption,
+  type PickColorOption,
+} from "../domain/colorSelection";
 import { ColorCard, ConfirmButton, InfoButton, Logo, ResetButton } from "../components";
 import { designTokens } from "../designSystem/tokens";
+import { useColorSelectionController } from "../hooks/useColorSelectionController";
 import { ColorHuntingInfoPopup } from "./ColorHuntingInfoPopup";
 import "../designSystem/styles.css";
 import "./ColorSelectionPage.css";
 
-export type ColorSelectionOption = {
-  color: Color;
-  label: string;
-};
-
-export type PickColorOption = (
-  currentColor: ColorSelectionOption | null,
-  options: readonly ColorSelectionOption[],
-) => ColorSelectionOption;
+export {
+  COLOR_SELECTION_OPTIONS,
+  pickRandomColorOption,
+  type ColorSelectionOption,
+  type PickColorOption,
+} from "../domain/colorSelection";
 
 export type ColorSelectionPageProps = {
   initialColor?: ColorSelectionOption;
@@ -25,86 +27,35 @@ export type ColorSelectionPageProps = {
   saveConfirmedState?: (state: ColorDeterminedAppState) => Promise<void> | void;
 };
 
-export const COLOR_SELECTION_OPTIONS: readonly ColorSelectionOption[] = [
-  createColorOption("PINK", designTokens.color.colorCard.pink),
-  createColorOption("PURPLE", designTokens.color.colorCard.purple),
-  createColorOption("NAVY", designTokens.color.colorCard.navy),
-  createColorOption("BLUE", designTokens.color.colorCard.blue),
-  createColorOption("GREEN", designTokens.color.colorCard.green),
-  createColorOption("YELLOW", designTokens.color.colorCard.yellow),
-  createColorOption("ORANGE", designTokens.color.colorCard.orange),
-  createColorOption("RED", designTokens.color.colorCard.red),
-];
-
 export function ColorSelectionPage({
   initialColor,
   onColorConfirmed,
   pickColorOption = pickRandomColorOption,
-  saveConfirmedState = noopSaveConfirmedState,
+  saveConfirmedState,
 }: ColorSelectionPageProps) {
   const shouldReduceMotion = useReducedMotion();
-  const [selectedColor, setSelectedColor] = useState<ColorSelectionOption>(
-    () => initialColor ?? pickColorOption(null, COLOR_SELECTION_OPTIONS),
-  );
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-
-  const confirmTextColor = useMemo(
-    () => getColorHuntingThemeTextColor(selectedColor.color.hex),
-    [selectedColor.color.hex],
-  );
-  const confirmButtonStyle = useMemo<CSSProperties>(
-    () => ({ color: confirmTextColor }),
-    [confirmTextColor],
-  );
-  const pageStyle = useMemo<ColorSelectionPageStyle>(
-    () => ({
-      "--color-selection-action-gap": designTokens.component.colorSelection.actionGap,
-      "--color-selection-content-gap": designTokens.component.colorSelection.contentGap,
-      "--color-selection-content-top-gap": designTokens.component.colorSelection.contentTopGap,
-      "--color-selection-copy-font-size": designTokens.component.colorSelection.copyFontSize,
-      "--color-selection-copy-line-height": designTokens.component.colorSelection.copyLineHeight,
-      "--color-selection-info-button-right": designTokens.component.colorSelection.infoButtonRight,
-      "--color-selection-info-button-top": designTokens.component.colorSelection.infoButtonTop,
-      "--color-selection-logo-height": designTokens.component.colorSelection.logoHeight,
-      "--color-selection-logo-width": designTokens.component.colorSelection.logoWidth,
-      "--color-selection-panel-min-height": designTokens.component.colorSelection.panelMinHeight,
-      "--color-selection-panel-padding-bottom":
-        designTokens.component.colorSelection.panelPaddingBottom,
-      "--color-selection-panel-padding-top": designTokens.component.colorSelection.panelPaddingTop,
-      "--color-selection-panel-padding-x": designTokens.component.colorSelection.panelPaddingX,
-      "--color-selection-panel-width": designTokens.component.colorSelection.panelWidth,
-    }),
-    [],
-  );
-
-  const resetColor = useCallback(() => {
-    setSaveError(null);
-    setSelectedColor((currentColor) => pickColorOption(currentColor, COLOR_SELECTION_OPTIONS));
-  }, [pickColorOption]);
-
-  const confirmColor = useCallback(async () => {
-    const confirmedState = selectColor(selectedColor.color);
-
-    setIsConfirming(true);
-    setSaveError(null);
-
-    try {
-      await saveConfirmedState(confirmedState);
-      onColorConfirmed?.(confirmedState);
-    } catch {
-      setSaveError("색상을 저장하지 못했어요. 다시 시도해주세요.");
-    } finally {
-      setIsConfirming(false);
-    }
-  }, [onColorConfirmed, saveConfirmedState, selectedColor.color]);
+  const {
+    closeInfo,
+    confirmButtonStyle,
+    confirmColor,
+    isConfirming,
+    isInfoOpen,
+    openInfo,
+    resetColor,
+    saveError,
+    selectedColor,
+  } = useColorSelectionController({
+    initialColor,
+    onColorConfirmed,
+    pickColorOption,
+    saveConfirmedState,
+  });
 
   return (
     <main
       aria-labelledby="color-selection-title"
       className="ds-mobile-app-page color-selection-page"
-      style={pageStyle}
+      style={COLOR_SELECTION_PAGE_STYLE}
     >
       <section className="ds-mobile-app-frame color-selection-panel">
         <header className="color-selection-header">
@@ -112,7 +63,7 @@ export function ColorSelectionPage({
           <InfoButton
             className="color-selection-info-button"
             label="컬러헌팅 정보 열기"
-            onClick={() => setIsInfoOpen(true)}
+            onClick={openInfo}
           />
         </header>
 
@@ -164,7 +115,7 @@ export function ColorSelectionPage({
         </div>
       </section>
 
-      <ColorHuntingInfoPopup onClose={() => setIsInfoOpen(false)} open={isInfoOpen} />
+      <ColorHuntingInfoPopup onClose={closeInfo} open={isInfoOpen} />
     </main>
   );
 }
@@ -186,28 +137,20 @@ type ColorSelectionPageStyle = CSSProperties & {
   "--color-selection-panel-width": string;
 };
 
-export function pickRandomColorOption(
-  currentColor: ColorSelectionOption | null,
-  options: readonly ColorSelectionOption[] = COLOR_SELECTION_OPTIONS,
-): ColorSelectionOption {
-  const selectableOptions =
-    currentColor === null
-      ? options
-      : options.filter((option) => option.color.hex !== currentColor.color.hex);
-  const fallbackOptions = selectableOptions.length > 0 ? selectableOptions : options;
-  const randomIndex = Math.floor(Math.random() * fallbackOptions.length);
-
-  return fallbackOptions[randomIndex] ?? COLOR_SELECTION_OPTIONS[0];
-}
-
-function createColorOption(label: string, hex: string): ColorSelectionOption {
-  const color = createColor(hex);
-
-  if (color === null) {
-    throw new Error(`Invalid color option: ${label}`);
-  }
-
-  return { color, label };
-}
-
-async function noopSaveConfirmedState() {}
+const COLOR_SELECTION_PAGE_STYLE: ColorSelectionPageStyle = {
+  "--color-selection-action-gap": designTokens.component.colorSelection.actionGap,
+  "--color-selection-content-gap": designTokens.component.colorSelection.contentGap,
+  "--color-selection-content-top-gap": designTokens.component.colorSelection.contentTopGap,
+  "--color-selection-copy-font-size": designTokens.component.colorSelection.copyFontSize,
+  "--color-selection-copy-line-height": designTokens.component.colorSelection.copyLineHeight,
+  "--color-selection-info-button-right": designTokens.component.colorSelection.infoButtonRight,
+  "--color-selection-info-button-top": designTokens.component.colorSelection.infoButtonTop,
+  "--color-selection-logo-height": designTokens.component.colorSelection.logoHeight,
+  "--color-selection-logo-width": designTokens.component.colorSelection.logoWidth,
+  "--color-selection-panel-min-height": designTokens.component.colorSelection.panelMinHeight,
+  "--color-selection-panel-padding-bottom":
+    designTokens.component.colorSelection.panelPaddingBottom,
+  "--color-selection-panel-padding-top": designTokens.component.colorSelection.panelPaddingTop,
+  "--color-selection-panel-padding-x": designTokens.component.colorSelection.panelPaddingX,
+  "--color-selection-panel-width": designTokens.component.colorSelection.panelWidth,
+};

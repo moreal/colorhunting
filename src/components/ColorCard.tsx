@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { Color } from "../appState";
+import type { Color } from "../domain/appState";
 import { classNames } from "./classNames";
 
 export type ColorCardProps = {

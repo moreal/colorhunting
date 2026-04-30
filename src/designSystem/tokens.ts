@@ -1,3 +1,5 @@
+import { COLOR_HUNTING_COLOR_HEX } from "../domain/colorHuntingTheme";
+
 export const designTokens = {
   color: {
     canvas: "#f5f7f1",
@@ -20,16 +22,7 @@ export const designTokens = {
     disabledText: "#778492",
     focus: "#2563eb",
     slotBackground: "#eef3ef",
-    colorCard: {
-      pink: "#FEB9DE",
-      purple: "#AE7BFF",
-      navy: "#000080",
-      blue: "#76D1FF",
-      green: "#34C759",
-      yellow: "#FFE44B",
-      orange: "#FE931B",
-      red: "#EF4B4B",
-    },
+    colorCard: COLOR_HUNTING_COLOR_HEX,
   },
   font: {
     display:

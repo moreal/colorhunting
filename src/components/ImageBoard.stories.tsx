@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ImageBoard } from "./ImageBoard";
-import type { BoardSlot, Image } from "../appState";
+import type { BoardSlot, Image } from "../domain/appState";
 
 const meta = {
   component: ImageBoard,

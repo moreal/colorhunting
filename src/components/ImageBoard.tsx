@@ -1,4 +1,4 @@
-import { BOARD_SLOT_COUNT, type BoardSlot } from "../appState";
+import { BOARD_SLOT_COUNT, type BoardSlot } from "../domain/appState";
 import { classNames } from "./classNames";
 import { ImageSlot } from "./ImageSlot";
 

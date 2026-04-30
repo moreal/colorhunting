@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getColorHuntingThemeTextColor } from "./colorHuntingTheme";
-import { designTokens } from "./designSystem/tokens";
+import { COLOR_HUNTING_COLOR_HEX, getColorHuntingThemeTextColor } from "./colorHuntingTheme";
 
 describe("getColorHuntingThemeTextColor", () => {
   it("컬러헌팅 팔레트에서는 노란색만 검정 텍스트를 사용한다", () => {
-    for (const [label, color] of Object.entries(designTokens.color.colorCard)) {
+    for (const [label, color] of Object.entries(COLOR_HUNTING_COLOR_HEX)) {
       const expectedTextColor = label === "yellow" ? "#000000" : "#ffffff";
 
       expect(getColorHuntingThemeTextColor(color)).toBe(expectedTextColor);

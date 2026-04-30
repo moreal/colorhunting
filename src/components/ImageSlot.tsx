@@ -1,6 +1,6 @@
 import { useId, type ChangeEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import type { Image } from "../appState";
+import type { Image } from "../domain/appState";
 import { classNames } from "./classNames";
 import { RemoveButton } from "./RemoveButton";
 

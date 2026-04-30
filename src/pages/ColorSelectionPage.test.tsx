@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createEmptyBoard, type ColorDeterminedAppState } from "../appState";
+import { createEmptyBoard, type ColorDeterminedAppState } from "../domain/appState";
 import {
   COLOR_SELECTION_OPTIONS,
   ColorSelectionPage,

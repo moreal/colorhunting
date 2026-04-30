@@ -1,47 +1,28 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type CSSProperties,
-  type MouseEvent,
-} from "react";
+import { useCallback, type CSSProperties, type MouseEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
+import type { AppState, BoardSlot, ColorDeterminedAppState } from "../domain/appState";
+import { composeBoardImage } from "../domain/boardExport";
+import { BOARD_IMAGE_FILE_ACCEPT, createBoardImageFromFile } from "../domain/boardImages";
+import { DownloadBottomSheet, ImageBoard, InfoButton, Logo } from "../components";
 import {
-  addImage,
-  removeImage,
-  type AppState,
-  type BoardSlot,
-  type ColorDeterminedAppState,
-  type Image,
-} from "../appState";
-import { composeBoardImage } from "../boardExport";
-import { BOARD_IMAGE_FILE_ACCEPT, createBoardImageFromFile } from "../boardImages";
-import {
-  DownloadBottomSheet,
-  ImageBoard,
-  InfoButton,
-  Logo,
-  type DownloadBottomSheetState,
-} from "../components";
-import { normalizeHexColor } from "../color";
-import { getColorHuntingThemeTextColor } from "../colorHuntingTheme";
-import { designTokens } from "../designSystem/tokens";
+  useImageBoardController,
+  type BoardExportDescriptor,
+  type CreateImageFromFile,
+  type ExportBoardImage,
+  type SaveBoardState,
+  type TriggerBoardDownload,
+} from "../hooks/useImageBoardController";
 import { ColorHuntingInfoPopup } from "./ColorHuntingInfoPopup";
 import "../designSystem/styles.css";
 import "./ImageBoardPage.css";
 
-export type CreateImageFromFile = (file: File, slotIndex: number) => Promise<Image>;
-export type SaveBoardState = (state: ColorDeterminedAppState) => Promise<void> | void;
-export type BoardExportDescriptor = {
-  color: string;
-  colorLabel: string;
-};
-export type ExportBoardImage = (
-  images: readonly BoardSlot[],
-  descriptor: BoardExportDescriptor,
-) => Promise<Blob>;
-export type TriggerBoardDownload = (blob: Blob, fileName: string) => void;
+export type {
+  BoardExportDescriptor,
+  CreateImageFromFile,
+  ExportBoardImage,
+  SaveBoardState,
+  TriggerBoardDownload,
+} from "../hooks/useImageBoardController";
 
 export type ImageBoardPageProps = {
   createImageFromFile?: CreateImageFromFile;
@@ -53,8 +34,6 @@ export type ImageBoardPageProps = {
   triggerDownload?: TriggerBoardDownload;
 };
 
-const COLOR_LABELS_BY_HEX = createColorLabelsByHex();
-
 export function ImageBoardPage({
   createImageFromFile = (file) => createBoardImageFromFile(file),
   exportBoardImage = defaultExportBoardImage,
@@ -65,123 +44,29 @@ export function ImageBoardPage({
   triggerDownload = triggerBoardDownload,
 }: ImageBoardPageProps) {
   const shouldReduceMotion = useReducedMotion();
-  const currentState = useMemo(() => getColorDeterminedState(state), [state]);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [isSavingBoard, setIsSavingBoard] = useState(false);
-  const [downloadStatus, setDownloadStatus] = useState<"completed" | "idle" | "loading">("idle");
-  const [boardError, setBoardError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setDownloadStatus("idle");
-    setBoardError(null);
-  }, [state]);
-
-  const colorLabel = useMemo(
-    () => getColorLabel(currentState?.color.hex),
-    [currentState?.color.hex],
-  );
-  const themeTextColor = useMemo(
-    () =>
-      getColorHuntingThemeTextColor(currentState?.color.hex ?? designTokens.color.colorCard.red),
-    [currentState?.color.hex],
-  );
-  const pageStyle = useMemo(
-    () =>
-      ({
-        "--image-board-theme-color": currentState?.color.hex ?? designTokens.color.colorCard.red,
-        "--image-board-theme-text-color": themeTextColor,
-      }) as CSSProperties,
-    [currentState?.color.hex, themeTextColor],
-  );
-
-  const filledImageCount = currentState?.images.filter(Boolean).length ?? 0;
-  const isBoardBusy = isSavingBoard || downloadStatus === "loading";
-  const downloadSheetState = getDownloadSheetState(filledImageCount, downloadStatus);
-
-  const persistNextState = useCallback(
-    async (nextState: ColorDeterminedAppState) => {
-      await saveBoardState(nextState);
-      onBoardChange?.(nextState);
-    },
-    [onBoardChange, saveBoardState],
-  );
-
-  const handleImageSelect = useCallback(
-    async (slotIndex: number, file: File) => {
-      if (currentState === null || isBoardBusy) {
-        return;
-      }
-
-      setIsSavingBoard(true);
-      setBoardError(null);
-
-      try {
-        const image = await createImageFromFile(file, slotIndex);
-        const nextState = addImage(currentState, slotIndex, image);
-
-        if (nextState.state !== "COLOR_DETERMINED") {
-          throw new Error("Image slot update did not produce a board state.");
-        }
-
-        await persistNextState(nextState);
-        setDownloadStatus("idle");
-      } catch {
-        setBoardError("이미지를 추가하지 못했어요. PNG, JPG, WebP 파일을 사용해주세요.");
-      } finally {
-        setIsSavingBoard(false);
-      }
-    },
-    [createImageFromFile, currentState, isBoardBusy, persistNextState],
-  );
-
-  const handleRemoveImage = useCallback(
-    async (slotIndex: number) => {
-      if (currentState === null || isBoardBusy) {
-        return;
-      }
-
-      setIsSavingBoard(true);
-      setBoardError(null);
-
-      try {
-        const nextState = removeImage(currentState, slotIndex);
-
-        if (nextState.state !== "COLOR_DETERMINED") {
-          throw new Error("Image removal did not produce a board state.");
-        }
-
-        await persistNextState(nextState);
-        setDownloadStatus("idle");
-      } catch {
-        setBoardError("이미지를 삭제하지 못했어요. 다시 시도해주세요.");
-      } finally {
-        setIsSavingBoard(false);
-      }
-    },
-    [currentState, isBoardBusy, persistNextState],
-  );
-
-  const handleDownload = useCallback(async () => {
-    if (currentState === null || filledImageCount === 0 || isBoardBusy) {
-      return;
-    }
-
-    setDownloadStatus("loading");
-    setBoardError(null);
-
-    try {
-      const blob = await exportBoardImage(currentState.images, {
-        color: currentState.color.hex,
-        colorLabel,
-      });
-
-      triggerDownload(blob, createBoardDownloadFileName(colorLabel));
-      setDownloadStatus("completed");
-    } catch {
-      setDownloadStatus("idle");
-      setBoardError("보드 이미지를 만들지 못했어요. 다시 시도해주세요.");
-    }
-  }, [colorLabel, currentState, exportBoardImage, filledImageCount, isBoardBusy, triggerDownload]);
+  const {
+    boardError,
+    closeInfo,
+    colorLabel,
+    currentState,
+    downloadBoard,
+    downloadSheetState,
+    downloadStatus,
+    isBoardBusy,
+    isInfoOpen,
+    isSavingBoard,
+    openInfo,
+    removeSelectedImage,
+    selectImage,
+    themeTextColor,
+  } = useImageBoardController({
+    createImageFromFile,
+    exportBoardImage,
+    onBoardChange,
+    saveBoardState,
+    state,
+    triggerDownload,
+  });
 
   const handleLogoClick = useCallback(
     (event: MouseEvent<HTMLAnchorElement>) => {
@@ -198,6 +83,11 @@ export function ImageBoardPage({
   if (currentState === null) {
     return null;
   }
+
+  const pageStyle: ImageBoardPageStyle = {
+    "--image-board-theme-color": currentState.color.hex,
+    "--image-board-theme-text-color": themeTextColor,
+  };
 
   return (
     <main
@@ -218,7 +108,7 @@ export function ImageBoardPage({
           <InfoButton
             className="image-board-info-button"
             label="컬러헌팅 정보 열기"
-            onClick={() => setIsInfoOpen(true)}
+            onClick={openInfo}
           />
         </header>
 
@@ -228,8 +118,8 @@ export function ImageBoardPage({
             className="image-board-grid"
             disabled={isBoardBusy}
             images={currentState.images}
-            onImageSelect={(slotIndex, file) => void handleImageSelect(slotIndex, file)}
-            onRemoveImage={(slotIndex) => void handleRemoveImage(slotIndex)}
+            onImageSelect={(slotIndex, file) => void selectImage(slotIndex, file)}
+            onRemoveImage={(slotIndex) => void removeSelectedImage(slotIndex)}
             variant="poster"
           />
           {boardError ? (
@@ -250,7 +140,7 @@ export function ImageBoardPage({
               buttonProps={{
                 "aria-label":
                   downloadStatus === "loading" ? "보드 이미지 다운로드 준비 중" : "DOWNLOAD",
-                onClick: () => void handleDownload(),
+                onClick: () => void downloadBoard(),
                 status: downloadStatus === "loading" ? "loading" : "idle",
               }}
               disabled={isSavingBoard}
@@ -260,51 +150,21 @@ export function ImageBoardPage({
         </footer>
       </section>
 
-      <ColorHuntingInfoPopup onClose={() => setIsInfoOpen(false)} open={isInfoOpen} />
+      <ColorHuntingInfoPopup onClose={closeInfo} open={isInfoOpen} />
     </main>
   );
 }
+
+type ImageBoardPageStyle = CSSProperties & {
+  "--image-board-theme-color": string;
+  "--image-board-theme-text-color": string;
+};
 
 async function defaultExportBoardImage(
   images: readonly BoardSlot[],
   descriptor: BoardExportDescriptor,
 ): Promise<Blob> {
   return await composeBoardImage(images, descriptor);
-}
-
-function getColorDeterminedState(state: AppState): ColorDeterminedAppState | null {
-  return state.state === "COLOR_DETERMINED" ? state : null;
-}
-
-function getDownloadSheetState(
-  filledImageCount: number,
-  downloadStatus: "completed" | "idle" | "loading",
-): DownloadBottomSheetState {
-  if (filledImageCount === 0) {
-    return "NON_ENOUGH_IMAGES";
-  }
-
-  if (downloadStatus === "completed") {
-    return "DOWNLOAD_COMPLETED";
-  }
-
-  return "ENOUGH_IMAGES";
-}
-
-function getColorLabel(hex: string | undefined): string {
-  const normalizedHex = normalizeHexColor(hex ?? "");
-
-  if (normalizedHex === null) {
-    return "COLOR";
-  }
-
-  return COLOR_LABELS_BY_HEX[normalizedHex] ?? normalizedHex.toUpperCase();
-}
-
-function createBoardDownloadFileName(colorLabel: string): string {
-  const date = new Date().toISOString().slice(0, 10);
-
-  return `colorhunting-${colorLabel.toLowerCase()}-${date}.png`;
 }
 
 function triggerBoardDownload(blob: Blob, fileName: string) {
@@ -320,15 +180,6 @@ function triggerBoardDownload(blob: Blob, fileName: string) {
   link.remove();
 
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
-}
-
-function createColorLabelsByHex(): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(designTokens.color.colorCard).map(([label, hex]) => [
-      hex.toLowerCase(),
-      label.toUpperCase(),
-    ]),
-  );
 }
 
 async function noopSaveBoardState() {}

@@ -1,4 +1,4 @@
-import { resetToNoColor, validateAppState, type AppState } from "./appState";
+import { resetToNoColor, validateAppState, type AppState } from "./domain/appState";
 
 const DATABASE_VERSION = 1;
 
