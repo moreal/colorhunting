@@ -3,7 +3,6 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Image } from "../domain/appState";
 import { BOARD_IMAGE_FILE_ACCEPT } from "../domain/boardImages";
 import { classNames } from "./classNames";
-import { RemoveButton } from "./RemoveButton";
 
 export type ImageSlotProps = {
   accept?: string;
@@ -11,7 +10,6 @@ export type ImageSlotProps = {
   disabled?: boolean;
   image: Image | null;
   onImageSelect?: (slotIndex: number, file: File) => void;
-  onRemoveImage?: (slotIndex: number) => void;
   slotIndex: number;
 };
 
@@ -23,7 +21,6 @@ export function ImageSlot({
   disabled = false,
   image,
   onImageSelect,
-  onRemoveImage,
   slotIndex,
 }: ImageSlotProps) {
   const inputId = useId();
@@ -72,12 +69,6 @@ export function ImageSlot({
             />
             <div className="ds-image-slot-overlay">
               <span className="ds-image-slot-name">{image.name}</span>
-              <RemoveButton
-                disabled={disabled}
-                label={`Remove image from slot ${slotNumber}`}
-                onClick={() => onRemoveImage?.(slotIndex)}
-                size="compact"
-              />
             </div>
           </motion.div>
         ) : (

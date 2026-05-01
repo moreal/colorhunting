@@ -374,6 +374,21 @@ button.ds-logo {
   gap: 26px;
 }
 
+.ds-download-bottom-sheet[data-mode="remove"] {
+  gap: 16px;
+}
+
+.ds-download-bottom-sheet-remove-target {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+}
+
+.ds-download-bottom-sheet-remove-icon {
+  cursor: default;
+  pointer-events: none;
+}
+
 .ds-download-bottom-sheet-message {
   min-height: 28px;
   margin: 0;

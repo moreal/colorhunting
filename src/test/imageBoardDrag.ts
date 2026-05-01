@@ -30,6 +30,18 @@ export function mockImageBoardSlotRects(slotFrames: readonly HTMLElement[]) {
   }
 }
 
+export function mockElementRect(
+  element: HTMLElement,
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+) {
+  vi.spyOn(element, "getBoundingClientRect").mockReturnValue(
+    createDomRect(left, top, width, height),
+  );
+}
+
 export function beginLongPressSlotDrag(slotFrames: readonly HTMLElement[], fromIndex: number) {
   const point = getSlotCenterPoint(fromIndex);
 
@@ -41,6 +53,29 @@ export function beginLongPressSlotDrag(slotFrames: readonly HTMLElement[], fromI
   });
   act(() => {
     vi.advanceTimersByTime(300);
+  });
+}
+
+export async function beginLongPressSlotDragWithRealTimer(
+  slotFrames: readonly HTMLElement[],
+  fromIndex: number,
+) {
+  const point = getSlotCenterPoint(fromIndex);
+
+  fireEvent.pointerDown(slotFrames[fromIndex], {
+    button: 0,
+    clientX: point.x,
+    clientY: point.y,
+    pointerId: 1,
+  });
+  await act(async () => {
+    await new Promise((resolve) => window.setTimeout(resolve, 300));
+  });
+}
+
+export async function waitForSlotDragSettle() {
+  await act(async () => {
+    await new Promise((resolve) => window.setTimeout(resolve, 200));
   });
 }
 
@@ -92,6 +127,18 @@ export function moveSlotDragOutside(slotFrames: readonly HTMLElement[], fromInde
   });
 }
 
+export function moveSlotDragToPoint(
+  slotFrames: readonly HTMLElement[],
+  fromIndex: number,
+  point: { x: number; y: number },
+) {
+  fireEvent.pointerMove(slotFrames[fromIndex], {
+    clientX: point.x,
+    clientY: point.y,
+    pointerId: 1,
+  });
+}
+
 export function dropSlotDragAt(
   slotFrames: readonly HTMLElement[],
   fromIndex: number,
@@ -99,6 +146,18 @@ export function dropSlotDragAt(
 ) {
   const point = getSlotCenterPoint(toIndex);
 
+  fireEvent.pointerUp(slotFrames[fromIndex], {
+    clientX: point.x,
+    clientY: point.y,
+    pointerId: 1,
+  });
+}
+
+export function dropSlotDragAtPoint(
+  slotFrames: readonly HTMLElement[],
+  fromIndex: number,
+  point: { x: number; y: number },
+) {
   fireEvent.pointerUp(slotFrames[fromIndex], {
     clientX: point.x,
     clientY: point.y,

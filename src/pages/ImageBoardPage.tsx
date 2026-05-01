@@ -1,9 +1,15 @@
-import { useCallback, type CSSProperties } from "react";
+import { useCallback, useRef, useState, type CSSProperties } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import type { AppState, BoardSlot, ColorDeterminedAppState } from "../domain/appState";
 import { composeBoardImage } from "../domain/boardExport";
 import { BOARD_IMAGE_FILE_ACCEPT, createBoardImageFromFile } from "../domain/boardImages";
-import { DownloadBottomSheet, ImageBoard, InfoButton, Logo } from "../components";
+import {
+  DownloadBottomSheet,
+  ImageBoard,
+  InfoButton,
+  Logo,
+  type ImageBoardDragStatus,
+} from "../components";
 import {
   useImageBoardController,
   type BoardExportDescriptor,
@@ -44,6 +50,11 @@ export function ImageBoardPage({
   triggerDownload = triggerBoardDownload,
 }: ImageBoardPageProps) {
   const shouldReduceMotion = useReducedMotion();
+  const removeDropTargetRef = useRef<HTMLDivElement | null>(null);
+  const [imageBoardDragStatus, setImageBoardDragStatus] = useState<ImageBoardDragStatus>({
+    active: false,
+    overRemoveTarget: false,
+  });
   const {
     boardError,
     closeInfo,
@@ -76,6 +87,10 @@ export function ImageBoardPage({
 
     onResetFlow(currentState);
   }, [currentState, onResetFlow]);
+
+  const getRemoveDropTargetRect = useCallback(() => {
+    return removeDropTargetRef.current?.getBoundingClientRect() ?? null;
+  }, []);
 
   if (currentState === null) {
     return null;
@@ -115,9 +130,11 @@ export function ImageBoardPage({
             accept={BOARD_IMAGE_FILE_ACCEPT}
             className="image-board-grid"
             disabled={isBoardBusy}
+            getRemoveDropTargetRect={getRemoveDropTargetRect}
             images={currentState.images}
+            onDragStatusChange={setImageBoardDragStatus}
             onImageSelect={(slotIndex, file) => void selectImage(slotIndex, file)}
-            onRemoveImage={(slotIndex) => void removeSelectedImage(slotIndex)}
+            onRemoveImage={removeSelectedImage}
             onReorderImages={reorderImages}
             variant="poster"
           />
@@ -133,6 +150,7 @@ export function ImageBoardPage({
             animate={{ opacity: downloadStatus === "loading" ? 0.72 : 1, y: 0 }}
             className="image-board-download-motion"
             initial={false}
+            ref={removeDropTargetRef}
             transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: [0.2, 0, 0, 1] }}
           >
             <DownloadBottomSheet
@@ -143,6 +161,8 @@ export function ImageBoardPage({
                 status: downloadStatus === "loading" ? "loading" : "idle",
               }}
               disabled={isSavingBoard}
+              mode={imageBoardDragStatus.active ? "remove" : "download"}
+              removeTargetActive={imageBoardDragStatus.overRemoveTarget}
               state={downloadSheetState}
             />
           </motion.div>

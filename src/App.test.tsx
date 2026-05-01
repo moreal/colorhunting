@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   createColor,
@@ -11,10 +11,20 @@ import {
 import type { AppStateStorage } from "./appStorage";
 import App from "./App";
 import { designTokens } from "./designSystem/tokens";
+import {
+  beginLongPressSlotDragWithRealTimer,
+  dropSlotDragAtPoint,
+  getImageBoardSlotFrames,
+  mockElementRect,
+  mockImageBoardSlotRects,
+  moveSlotDragToPoint,
+  waitForSlotDragSettle,
+} from "./test/imageBoardDrag";
 
 describe("App", () => {
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -151,7 +161,14 @@ describe("App", () => {
       await screen.findByRole("img", { name: "Uploaded board image red.png" }),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Remove image from slot 1" }));
+    const dropPoint = mockDownloadSheetDropTargetRect();
+    const slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
+    await beginLongPressSlotDragWithRealTimer(slotFrames, 0);
+    moveSlotDragToPoint(slotFrames, 0, dropPoint);
+    dropSlotDragAtPoint(slotFrames, 0, dropPoint);
+    await act(async () => {});
+    await waitForSlotDragSettle();
 
     await waitFor(() =>
       expect(
@@ -251,6 +268,19 @@ function createBoardState(
     images: options.images ?? createEmptyBoard(),
     state: "COLOR_DETERMINED",
   };
+}
+
+function mockDownloadSheetDropTargetRect() {
+  const downloadButton = screen.getByRole("button", { name: "DOWNLOAD" });
+  const dropTarget = downloadButton.closest(".image-board-download-motion");
+
+  if (!(dropTarget instanceof HTMLElement)) {
+    throw new Error("Download bottom sheet drop target must be rendered.");
+  }
+
+  mockElementRect(dropTarget, 0, 320, 390, 140);
+
+  return { x: 195, y: 370 };
 }
 
 function createDeferred<T>() {

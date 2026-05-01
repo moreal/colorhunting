@@ -14,9 +14,12 @@ import { designTokens } from "../designSystem/tokens";
 import {
   beginLongPressSlotDrag,
   dropSlotDragAt,
+  dropSlotDragAtPoint,
   getImageBoardSlotFrames,
+  mockElementRect,
   mockImageBoardSlotRects,
   moveSlotDragTo,
+  moveSlotDragToPoint,
 } from "../test/imageBoardDrag";
 import { ImageBoardPage, type ExportBoardImage, type TriggerBoardDownload } from "./ImageBoardPage";
 
@@ -195,6 +198,7 @@ describe("ImageBoardPage", () => {
 
   it("저장 중에는 오래된 보드를 다운로드하지 못하게 막는다", async () => {
     const user = userEvent.setup();
+    vi.useFakeTimers();
     const saveDeferred = createDeferred<void>();
     const saveBoardState = vi.fn<(state: ColorDeterminedAppState) => Promise<void>>(
       () => saveDeferred.promise,
@@ -209,8 +213,15 @@ describe("ImageBoardPage", () => {
         initialState={createBoardState({ images: createFilledBoard() })}
       />,
     );
+    const dropPoint = mockDownloadSheetDropTargetRect();
+    const slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
 
-    await user.click(screen.getByRole("button", { name: "Remove image from slot 2" }));
+    beginLongPressSlotDrag(slotFrames, 1);
+    moveSlotDragToPoint(slotFrames, 1, dropPoint);
+    dropSlotDragAtPoint(slotFrames, 1, dropPoint);
+    await act(async () => {});
+    vi.useRealTimers();
 
     await waitFor(() => expect(saveBoardState).toHaveBeenCalledOnce());
     expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeDisabled();
@@ -228,7 +239,7 @@ describe("ImageBoardPage", () => {
   });
 
   it("이미지를 제거하면 요청한 슬롯만 비우고 저장한다", async () => {
-    const user = userEvent.setup();
+    vi.useFakeTimers();
     const saveBoardState = vi.fn<(state: ColorDeterminedAppState) => Promise<void>>(async () => {});
     const firstImage = createSampleImage(1);
     const secondImage = createSampleImage(2);
@@ -243,16 +254,28 @@ describe("ImageBoardPage", () => {
         saveBoardState={saveBoardState}
       />,
     );
+    const dropPoint = mockDownloadSheetDropTargetRect();
+    const slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
 
-    await user.click(screen.getByRole("button", { name: "Remove image from slot 1" }));
+    beginLongPressSlotDrag(slotFrames, 0);
 
-    await waitFor(() =>
-      expect(saveBoardState).toHaveBeenCalledWith(
-        createBoardState({
-          images: createBoard([[1, secondImage]]),
-        }),
-      ),
+    expect(screen.queryByRole("button", { name: "DOWNLOAD" })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("삭제하려면 끌어다 놓으세요");
+
+    moveSlotDragToPoint(slotFrames, 0, dropPoint);
+    dropSlotDragAtPoint(slotFrames, 0, dropPoint);
+    await act(async () => {});
+
+    expect(saveBoardState).toHaveBeenCalledWith(
+      createBoardState({
+        images: createBoard([[1, secondImage]]),
+      }),
     );
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+    });
+    vi.useRealTimers();
     await waitFor(() =>
       expect(screen.queryByRole("img", { name: "Sample image 1" })).not.toBeInTheDocument(),
     );
@@ -485,6 +508,19 @@ function createDeferred<T>() {
   });
 
   return { promise, reject, resolve };
+}
+
+function mockDownloadSheetDropTargetRect() {
+  const downloadButton = screen.getByRole("button", { name: "DOWNLOAD" });
+  const dropTarget = downloadButton.closest(".image-board-download-motion");
+
+  if (!(dropTarget instanceof HTMLElement)) {
+    throw new Error("Download bottom sheet drop target must be rendered.");
+  }
+
+  mockElementRect(dropTarget, 0, 320, 390, 140);
+
+  return { x: 195, y: 370 };
 }
 
 function createBoard(entries: Array<[number, Image]> = []): Board {

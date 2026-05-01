@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 import { DownloadBottomSheet, type DownloadBottomSheetState } from "./DownloadBottomSheet";
-import { RemoveButton } from "./RemoveButton";
 
 const meta = {
   component: DownloadBottomSheet,
@@ -68,21 +67,9 @@ export const RemoveStates: Story = {
           Btn_Remove
         </span>
         <div style={{ display: "grid", gap: "24px", justifyItems: "center" }}>
-          <RemoveButton />
-          <RemoveButton pressed />
+          <DownloadBottomSheet mode="remove" state="ENOUGH_IMAGES" />
+          <DownloadBottomSheet mode="remove" removeTargetActive state="ENOUGH_IMAGES" />
         </div>
-        <p
-          style={{
-            color: "#ffffff",
-            fontFamily: "var(--ds-font-family-display)",
-            fontSize: "22px",
-            lineHeight: 1.4,
-            margin: "12px 0 0",
-            textAlign: "center",
-          }}
-        >
-          삭제하려면 끌어다 놓으세요
-        </p>
       </div>
     </BottomSheetStage>
   ),
@@ -120,19 +107,7 @@ export const FullPreview: Story = {
           >
             Btn_Remove
           </span>
-          <RemoveButton />
-          <p
-            style={{
-              color: "#ffffff",
-              fontFamily: "var(--ds-font-family-display)",
-              fontSize: "22px",
-              lineHeight: 1.4,
-              margin: 0,
-              textAlign: "center",
-            }}
-          >
-            삭제하려면 끌어다 놓으세요
-          </p>
+          <DownloadBottomSheet mode="remove" state="ENOUGH_IMAGES" />
         </div>
       </div>
     </BottomSheetStage>

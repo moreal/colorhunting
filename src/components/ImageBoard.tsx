@@ -2,15 +2,25 @@ import { motion, useReducedMotion } from "motion/react";
 import { BOARD_SLOT_COUNT, type BoardSlot } from "../domain/appState";
 import { classNames } from "./classNames";
 import { ImageSlot } from "./ImageSlot";
-import { useImageBoardReorder, type ReorderImages } from "./useImageBoardReorder";
+import {
+  useImageBoardReorder,
+  type ImageBoardDragStatus,
+  type ImageBoardRemoveDropTargetRect,
+  type RemoveImage,
+  type ReorderImages,
+} from "./useImageBoardReorder";
+
+export type { ImageBoardDragStatus, ImageBoardRemoveDropTargetRect };
 
 export type ImageBoardProps = {
   accept?: string;
   className?: string;
   disabled?: boolean;
+  getRemoveDropTargetRect?: () => ImageBoardRemoveDropTargetRect | null;
   images: readonly BoardSlot[];
+  onDragStatusChange?: (status: ImageBoardDragStatus) => void;
   onImageSelect?: (slotIndex: number, file: File) => void;
-  onRemoveImage?: (slotIndex: number) => void;
+  onRemoveImage?: RemoveImage;
   onReorderImages?: ReorderImages;
   variant?: "default" | "poster";
 };
@@ -19,7 +29,9 @@ export function ImageBoard({
   accept,
   className,
   disabled = false,
+  getRemoveDropTargetRect,
   images,
+  onDragStatusChange,
   onImageSelect,
   onRemoveImage,
   onReorderImages,
@@ -27,6 +39,7 @@ export function ImageBoard({
 }: ImageBoardProps) {
   const shouldReduceMotion = useReducedMotion();
   const {
+    canDragImages,
     canReorder,
     dragOverlay,
     dragPhase,
@@ -43,7 +56,10 @@ export function ImageBoard({
     slots,
   } = useImageBoardReorder({
     disabled,
+    getRemoveDropTargetRect,
     images,
+    onDragStatusChange,
+    onRemoveImage,
     onReorderImages,
     shouldReduceMotion,
   });
@@ -66,7 +82,7 @@ export function ImageBoard({
             animate={getSlotAnimation(image)}
             className="ds-image-board-reorder-slot"
             data-drag-state={slotDragState}
-            data-draggable={image !== null && canReorder ? "true" : undefined}
+            data-draggable={image !== null && canDragImages ? "true" : undefined}
             data-slot-index={slotIndex}
             initial={false}
             key={getBoardSlotKey(image, slotIndex)}
@@ -105,7 +121,6 @@ export function ImageBoard({
               disabled={disabled}
               image={image}
               onImageSelect={onImageSelect}
-              onRemoveImage={onRemoveImage}
               slotIndex={slotIndex}
             />
           </motion.div>

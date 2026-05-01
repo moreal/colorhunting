@@ -6,16 +6,21 @@ import { moveBoardSlot, type BoardSlot, type Image } from "../domain/appState";
 import { designTokens } from "../designSystem/tokens";
 import {
   beginLongPressSlotDrag,
+  beginLongPressSlotDragWithRealTimer,
   cancelSlotDrag,
   dropSlotDragAt,
+  dropSlotDragAtPoint,
   dropSlotDragOutside,
   getImageBoardSlotFrames,
   getImageBoardSlotGroups,
+  mockElementRect,
   mockImageBoardSlotRects,
   movePressedSlotBy,
   moveSlotDragOutside,
+  moveSlotDragToPoint,
   moveSlotDragTo,
   startSlotPress,
+  waitForSlotDragSettle,
 } from "../test/imageBoardDrag";
 import { BottomActionBar } from "./BottomActionBar";
 import { CloseButton } from "./CloseButton";
@@ -34,7 +39,11 @@ import { ResetButton } from "./ResetButton";
 describe("design system components", () => {
   afterEach(() => {
     cleanup();
+    if (vi.isFakeTimers()) {
+      vi.runOnlyPendingTimers();
+    }
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it("로고는 홈 링크로 읽히는 제품 이름을 제공한다", () => {
@@ -166,6 +175,28 @@ describe("design system components", () => {
     expect(screen.getByText("다운로드 완료했어요!")).toBeVisible();
   });
 
+  it("다운로드 바텀시트는 삭제 모드에서 드롭 안내와 활성 상태를 보여준다", () => {
+    const { rerender } = render(<DownloadBottomSheet mode="remove" state="ENOUGH_IMAGES" />);
+
+    expect(screen.queryByRole("button", { name: "DOWNLOAD" })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("삭제하려면 끌어다 놓으세요");
+    expect(document.querySelector(".ds-download-bottom-sheet")).toHaveAttribute(
+      "data-remove-target",
+      "idle",
+    );
+
+    rerender(<DownloadBottomSheet mode="remove" removeTargetActive state="ENOUGH_IMAGES" />);
+
+    expect(document.querySelector(".ds-download-bottom-sheet")).toHaveAttribute(
+      "data-remove-target",
+      "active",
+    );
+    expect(document.querySelector(".ds-download-bottom-sheet-remove-icon")).toHaveAttribute(
+      "data-state",
+      "pressed",
+    );
+  });
+
   it("삭제 버튼은 기본 상태와 드래그 오버 상태를 구분한다", () => {
     render(
       <>
@@ -281,18 +312,52 @@ describe("design system components", () => {
     expect(onImageSelect).toHaveBeenCalledWith(0, file);
   });
 
-  it("채워진 이미지 슬롯은 이미지와 슬롯별 제거 버튼을 보여준다", async () => {
-    const user = userEvent.setup();
-    const onRemoveImage = vi.fn<(slotIndex: number) => void>();
-    render(<ImageSlot image={createSampleImage(1)} onRemoveImage={onRemoveImage} slotIndex={0} />);
+  it("채워진 이미지 슬롯은 삭제 버튼 없이 이미지를 보여준다", () => {
+    render(<ImageSlot image={createSampleImage(1)} slotIndex={0} />);
 
     expect(screen.getByRole("img", { name: "Sample image 1" })).toHaveAttribute(
       "draggable",
       "false",
     );
-    await user.click(screen.getByRole("button", { name: "Remove image from slot 1" }));
+    expect(
+      screen.queryByRole("button", { name: /Remove image from slot/ }),
+    ).not.toBeInTheDocument();
+  });
 
-    expect(onRemoveImage).toHaveBeenCalledWith(0);
+  it("정보 팝업은 열릴 때 포커스를 닫기 버튼으로 보내고 Escape로 닫힌다", async () => {
+    const user = userEvent.setup();
+    render(<InfoPopupHarness />);
+
+    const opener = screen.getByRole("button", { name: "Open details" });
+    await user.click(opener);
+
+    expect(screen.getByRole("dialog", { name: "About Colorhunting" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Close information" })).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "About Colorhunting" })).not.toBeInTheDocument();
+    });
+    expect(opener).toHaveFocus();
+  });
+
+  it("정보 팝업은 Tab 포커스를 대화상자 안에 가둔다", async () => {
+    const user = userEvent.setup();
+    render(<InfoPopupHarness />);
+
+    await user.click(screen.getByRole("button", { name: "Open details" }));
+
+    const closeButton = screen.getByRole("button", { name: "Close information" });
+    const contentButton = screen.getByRole("button", { name: "Read details" });
+
+    expect(closeButton).toHaveFocus();
+    await user.tab();
+    expect(contentButton).toHaveFocus();
+    await user.tab();
+    expect(closeButton).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(contentButton).toHaveFocus();
   });
 
   it("이미지 보드는 항상 아홉 개의 슬롯을 렌더링한다", () => {
@@ -335,9 +400,10 @@ describe("design system components", () => {
       "settling",
     );
 
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(200);
     });
+    vi.useRealTimers();
     expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
       "data-reordering",
     );
@@ -372,6 +438,56 @@ describe("design system components", () => {
     act(() => {
       vi.advanceTimersByTime(200);
     });
+    expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
+      "data-reordering",
+    );
+  });
+
+  it("이미지 보드는 길게 누른 슬롯을 삭제 영역에 놓으면 삭제를 요청한다", async () => {
+    const onDragStatusChange =
+      vi.fn<(status: { active: boolean; overRemoveTarget: boolean }) => void>();
+    const onRemoveImage = vi.fn<(slotIndex: number) => boolean>(() => true);
+    let removeTarget: HTMLDivElement | null = null;
+    render(
+      <>
+        <ImageBoard
+          getRemoveDropTargetRect={() => removeTarget?.getBoundingClientRect() ?? null}
+          images={[createSampleImage(1), createSampleImage(2)]}
+          onDragStatusChange={onDragStatusChange}
+          onRemoveImage={onRemoveImage}
+        />
+        <div
+          ref={(element) => {
+            removeTarget = element;
+          }}
+        />
+      </>,
+    );
+    if (removeTarget === null) {
+      throw new Error("Remove drop target must be rendered.");
+    }
+    mockElementRect(removeTarget, 0, 320, 300, 120);
+    const slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
+
+    await beginLongPressSlotDragWithRealTimer(slotFrames, 0);
+    moveSlotDragToPoint(slotFrames, 0, { x: 150, y: 360 });
+
+    expect(onDragStatusChange).toHaveBeenLastCalledWith({
+      active: true,
+      overRemoveTarget: true,
+    });
+
+    dropSlotDragAtPoint(slotFrames, 0, { x: 150, y: 360 });
+    await act(async () => {});
+
+    expect(onRemoveImage).toHaveBeenCalledWith(0);
+    expect(screen.getByRole("group", { name: /Image board/ })).toHaveAttribute(
+      "data-reordering",
+      "settling",
+    );
+
+    await waitForSlotDragSettle();
     expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
       "data-reordering",
     );
@@ -461,42 +577,6 @@ describe("design system components", () => {
     );
 
     expect(screen.getByRole("toolbar", { name: "Board actions" })).toBeInTheDocument();
-  });
-
-  it("정보 팝업은 열릴 때 포커스를 닫기 버튼으로 보내고 Escape로 닫힌다", async () => {
-    const user = userEvent.setup();
-    render(<InfoPopupHarness />);
-
-    const opener = screen.getByRole("button", { name: "Open details" });
-    await user.click(opener);
-
-    expect(screen.getByRole("dialog", { name: "About Colorhunting" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Close information" })).toHaveFocus();
-
-    await user.keyboard("{Escape}");
-
-    await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "About Colorhunting" })).not.toBeInTheDocument();
-    });
-    expect(opener).toHaveFocus();
-  });
-
-  it("정보 팝업은 Tab 포커스를 대화상자 안에 가둔다", async () => {
-    const user = userEvent.setup();
-    render(<InfoPopupHarness />);
-
-    await user.click(screen.getByRole("button", { name: "Open details" }));
-
-    const closeButton = screen.getByRole("button", { name: "Close information" });
-    const contentButton = screen.getByRole("button", { name: "Read details" });
-
-    expect(closeButton).toHaveFocus();
-    await user.tab();
-    expect(contentButton).toHaveFocus();
-    await user.tab();
-    expect(closeButton).toHaveFocus();
-    await user.tab({ shift: true });
-    expect(contentButton).toHaveFocus();
   });
 
   it("이미지 보드는 저장된 순서가 바뀐 뒤에도 다시 드래그할 수 있다", async () => {

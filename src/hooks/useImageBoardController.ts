@@ -157,7 +157,7 @@ export function useImageBoardController({
   const removeSelectedImage = useCallback(
     async (slotIndex: number) => {
       if (currentState === null || isBoardBusy) {
-        return;
+        return false;
       }
 
       dispatch({ type: "saveStarted" });
@@ -171,8 +171,10 @@ export function useImageBoardController({
 
         await persistNextState(nextState);
         dispatch({ type: "saveSucceeded" });
+        return true;
       } catch {
         dispatch({ error: REMOVE_IMAGE_ERROR, type: "saveFailed" });
+        return false;
       }
     },
     [currentState, isBoardBusy, persistNextState],

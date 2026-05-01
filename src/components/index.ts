@@ -8,6 +8,7 @@ export { ColorCard, type ColorCardProps } from "./ColorCard";
 export { ConfirmButton, type ConfirmButtonProps } from "./ConfirmButton";
 export {
   DownloadBottomSheet,
+  type DownloadBottomSheetMode,
   type DownloadBottomSheetProps,
   type DownloadBottomSheetState,
 } from "./DownloadBottomSheet";
@@ -16,10 +17,15 @@ export {
   type DownloadButtonProps,
   type DownloadButtonStatus,
 } from "./DownloadButton";
-export { ImageBoard, type ImageBoardProps } from "./ImageBoard";
+export {
+  ImageBoard,
+  type ImageBoardDragStatus,
+  type ImageBoardProps,
+  type ImageBoardRemoveDropTargetRect,
+} from "./ImageBoard";
 export { ImageSlot, type ImageSlotProps } from "./ImageSlot";
 export { InfoButton, type InfoButtonProps } from "./InfoButton";
 export { InfoPopup, type InfoPopupProps } from "./InfoPopup";
 export { Logo, type LogoProps } from "./Logo";
-export { RemoveButton, type RemoveButtonProps } from "./RemoveButton";
+export { RemoveButton, RemoveButtonIcon, type RemoveButtonProps } from "./RemoveButton";
 export { ResetButton, type ResetButtonProps } from "./ResetButton";
