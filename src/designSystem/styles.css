@@ -819,10 +819,14 @@ button.ds-logo {
   padding: 20px;
 }
 
+.ds-dialog-header {
+  height: 40px;
+}
+
 .ds-dialog-close-button {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 12px;
+  right: 12px;
 }
 
 .ds-dialog-title {
@@ -834,7 +838,7 @@ button.ds-logo {
 .ds-dialog-content {
   color: var(--ds-color-muted-text);
   line-height: 1.6;
-  padding-block-start: 52px;
+  padding-block-start: 0;
 }
 
 .ds-dialog-content p {

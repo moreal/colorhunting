@@ -150,14 +150,18 @@ describe("ColorSelectionPage", () => {
     expect(window.getComputedStyle(dialog).display).toBe("block");
     const closeButton = screen.getByRole("button", { name: "컬러헌팅 정보 닫기" });
     const closeButtonStyle = window.getComputedStyle(closeButton);
+    const dialogHeader = closeButton.closest(".ds-dialog-header");
     const dialogContent = dialog.querySelector(".ds-dialog-content");
     expect(closeButton).toHaveFocus();
+    expect(dialogHeader).toBeInstanceOf(HTMLElement);
     expect(dialogContent).toBeInstanceOf(HTMLElement);
-    expect(closeButton.closest(".ds-dialog-header")).toBeNull();
+    expect(window.getComputedStyle(dialogHeader as HTMLElement).height).toBe("40px");
     expect(closeButtonStyle.position).toBe("absolute");
-    expect(closeButtonStyle.top).toBe("20px");
-    expect(closeButtonStyle.right).toBe("20px");
-    expect(window.getComputedStyle(dialogContent as HTMLElement).paddingBlockStart).toBe("52px");
+    expect(closeButtonStyle.top).toBe("12px");
+    expect(closeButtonStyle.right).toBe("12px");
+    expect(
+      Number.parseFloat(window.getComputedStyle(dialogContent as HTMLElement).paddingBlockStart),
+    ).toBe(0);
     expect([
       closeButtonStyle.borderTopWidth,
       closeButtonStyle.borderRightWidth,

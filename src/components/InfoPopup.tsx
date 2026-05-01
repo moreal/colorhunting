@@ -86,12 +86,14 @@ export function InfoPopup({
               ease: [0.2, 0, 0, 1],
             }}
           >
-            <CloseButton
-              className="ds-dialog-close-button"
-              label={closeLabel}
-              onClick={onClose}
-              ref={closeButtonRef}
-            />
+            <div className="ds-dialog-header">
+              <CloseButton
+                className="ds-dialog-close-button"
+                label={closeLabel}
+                onClick={onClose}
+                ref={closeButtonRef}
+              />
+            </div>
             <div className="ds-dialog-content">{children}</div>
           </motion.section>
         </motion.div>
