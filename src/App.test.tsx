@@ -47,6 +47,21 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "Confirm" })).toBeInTheDocument();
   });
 
+  it("페이지 상태 전환은 별도 레이아웃 애니메이션 wrapper를 만들지 않는다", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <App storage={createMemoryStorage({ initialState: { state: "NO_COLOR" } })} />,
+    );
+
+    expect(await screen.findByRole("button", { name: "Reset" })).toBeInTheDocument();
+    expect(container.firstElementChild).toBe(screen.getByRole("main"));
+
+    await user.click(screen.getByRole("button", { name: "Confirm" }));
+
+    expect(await screen.findByRole("button", { name: "DOWNLOAD" })).toBeDisabled();
+    expect(container.firstElementChild).toBe(screen.getByRole("main"));
+  });
+
   it("저장된 색상 보드 상태가 있으면 이미지 보드 화면에서 시작한다", async () => {
     render(<App storage={createMemoryStorage({ initialState: createBoardState() })} />);
 

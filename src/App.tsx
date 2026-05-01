@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { resetToNoColor, type AppState, type ColorDeterminedAppState } from "./domain/appState";
 import { findColorSelectionOption, type ColorSelectionOption } from "./domain/colorSelection";
 import { createAppStateStorage, type AppStateStorage } from "./appStorage";
@@ -16,7 +15,6 @@ type AppLoadState =
 
 export default function App({ storage: providedStorage }: AppProps) {
   const storage = useMemo(() => providedStorage ?? createAppStateStorage(), [providedStorage]);
-  const shouldReduceMotion = useReducedMotion();
   const [loadState, setLoadState] = useState<AppLoadState>({ status: "loading" });
   const [initialSelectionColor, setInitialSelectionColor] = useState<
     ColorSelectionOption | undefined
@@ -49,14 +47,6 @@ export default function App({ storage: providedStorage }: AppProps) {
       isActive = false;
     };
   }, [storage]);
-
-  const pageTransition = useMemo(
-    () => ({
-      duration: shouldReduceMotion ? 0 : 0.18,
-      ease: [0.2, 0, 0, 1] as const,
-    }),
-    [shouldReduceMotion],
-  );
 
   const saveColorDeterminedState = useCallback(
     async (nextState: ColorDeterminedAppState) => {
@@ -104,7 +94,6 @@ export default function App({ storage: providedStorage }: AppProps) {
 
   const { appState, message } = loadState;
   const isColorSelection = appState.state === "NO_COLOR";
-  const pageYOffset = shouldReduceMotion ? 0 : isColorSelection ? 12 : -12;
 
   return (
     <>
@@ -113,30 +102,20 @@ export default function App({ storage: providedStorage }: AppProps) {
           {message}
         </p>
       ) : null}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={appState.state}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -pageYOffset }}
-          initial={{ opacity: 0, y: pageYOffset }}
-          transition={pageTransition}
-        >
-          {isColorSelection ? (
-            <ColorSelectionPage
-              initialColor={initialSelectionColor}
-              onColorConfirmed={handleColorConfirmed}
-              saveConfirmedState={saveColorDeterminedState}
-            />
-          ) : (
-            <ImageBoardPage
-              onBoardChange={handleBoardChange}
-              onResetFlow={(state) => void resetFlow(state)}
-              saveBoardState={saveColorDeterminedState}
-              state={appState}
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      {isColorSelection ? (
+        <ColorSelectionPage
+          initialColor={initialSelectionColor}
+          onColorConfirmed={handleColorConfirmed}
+          saveConfirmedState={saveColorDeterminedState}
+        />
+      ) : (
+        <ImageBoardPage
+          onBoardChange={handleBoardChange}
+          onResetFlow={(state) => void resetFlow(state)}
+          saveBoardState={saveColorDeterminedState}
+          state={appState}
+        />
+      )}
     </>
   );
 }

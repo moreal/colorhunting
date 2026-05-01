@@ -10,11 +10,20 @@ export type ColorHuntingInfoPopupProps = Omit<
 };
 
 const PROFILE_LINKS: readonly {
+  description: string;
   href: string;
   label: ReactNode;
 }[] = [
-  { href: "https://www.behance.net/Oyoung50", label: "@OYOUNG" },
-  { href: "https://github.com/moreal", label: "@moreal" },
+  {
+    description: "Design by",
+    href: "https://www.behance.net/Oyoung50",
+    label: "@OYOUNG",
+  },
+  {
+    description: "Developed by",
+    href: "https://github.com/moreal",
+    label: "@moreal",
+  },
 ];
 
 export function ColorHuntingInfoPopup({
@@ -26,6 +35,8 @@ export function ColorHuntingInfoPopup({
     <InfoPopup closeLabel={closeLabel} title={title} {...popupProps}>
       <div className="color-hunting-info-content">
         <p>
+          컬러헌팅(Color Hunting)이란
+          <br />
           특정한 색상을 정해 일상이나 자연 속에서 보물찾기하듯 찾고, 사진으로
           기록하며 주변 환경을 새롭게 관찰하는 활동입니다.
         </p>
@@ -36,6 +47,7 @@ export function ColorHuntingInfoPopup({
         <ul aria-label="프로필 링크" className="color-hunting-profile-links">
           {PROFILE_LINKS.map((link) => (
             <li key={link.href}>
+              {link.description}{" "}
               <a
                 className="color-hunting-profile-link"
                 href={link.href}
