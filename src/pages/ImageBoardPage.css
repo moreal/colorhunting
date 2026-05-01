@@ -30,7 +30,7 @@
 
 .image-board-title {
   margin: 0;
-  font-family: var(--ds-font-family-display);
+  font-family: var(--ds-font-family-pixel);
   font-size: 18px;
   font-weight: 400;
   line-height: 1;
@@ -43,8 +43,6 @@
   position: absolute;
   right: 22px;
   bottom: 24px;
-  width: 28px;
-  height: 30px;
   border: 0;
   background: transparent;
   color: currentColor;
@@ -116,7 +114,6 @@
 .image-board-footer .ds-download-bottom-sheet-message {
   min-height: 18px;
   color: var(--image-board-theme-text-color);
-  font-size: 12px;
 }
 
 @media (max-width: 420px) {

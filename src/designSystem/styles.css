@@ -404,7 +404,7 @@ button.ds-logo {
   min-height: 28px;
   margin: 0;
   color: #ffffff;
-  font-family: var(--ds-font-family-pixel);
+  font-family: var(--ds-font-family-display);
   font-size: 16px;
   line-height: 1.2;
   letter-spacing: 0;
@@ -820,7 +820,7 @@ button.ds-logo {
 .ds-dialog-surface {
   display: grid;
   gap: 18px;
-  width: min(100%, 440px);
+  width: min(100%, 320px);
   max-height: min(620px, calc(100dvh - 36px));
   overflow: auto;
   border: 1px solid var(--ds-color-border);
