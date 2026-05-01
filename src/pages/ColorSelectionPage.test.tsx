@@ -145,10 +145,19 @@ describe("ColorSelectionPage", () => {
     const opener = screen.getByRole("button", { name: "컬러헌팅 정보 열기" });
     await user.click(opener);
 
-    expect(screen.getByRole("dialog", { name: "컬러헌팅(Color Hunting)" })).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog", { name: "컬러헌팅(Color Hunting)" });
+    expect(dialog).toBeInTheDocument();
+    expect(window.getComputedStyle(dialog).display).toBe("block");
     const closeButton = screen.getByRole("button", { name: "컬러헌팅 정보 닫기" });
     const closeButtonStyle = window.getComputedStyle(closeButton);
+    const dialogContent = dialog.querySelector(".ds-dialog-content");
     expect(closeButton).toHaveFocus();
+    expect(dialogContent).toBeInstanceOf(HTMLElement);
+    expect(closeButton.closest(".ds-dialog-header")).toBeNull();
+    expect(closeButtonStyle.position).toBe("absolute");
+    expect(closeButtonStyle.top).toBe("20px");
+    expect(closeButtonStyle.right).toBe("20px");
+    expect(window.getComputedStyle(dialogContent as HTMLElement).paddingBlockStart).toBe("52px");
     expect([
       closeButtonStyle.borderTopWidth,
       closeButtonStyle.borderRightWidth,

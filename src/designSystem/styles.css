@@ -31,11 +31,11 @@
   --ds-color-card-orange: #fe931b;
   --ds-color-card-red: #ef4b4b;
   --ds-font-family-display:
-    "NeoDunggeunmo Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", monospace;
+    "NeoDunggeunmo Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    monospace;
   --ds-font-family-pixel:
-    "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", monospace;
+    "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    monospace;
   --ds-color-card-max-width: 146.61px;
   --ds-color-card-max-height: 174px;
   --ds-color-card-swatch-size: 120.83px;
@@ -102,10 +102,7 @@ button.ds-logo {
   /*width: min(100%, var(--ds-mobile-app-frame-width));*/
   min-height: min(
     var(--ds-mobile-app-frame-min-height),
-    calc(
-      100dvh - var(--ds-mobile-app-page-padding) -
-        var(--ds-mobile-app-page-padding)
-    )
+    calc(100dvh - var(--ds-mobile-app-page-padding) - var(--ds-mobile-app-page-padding))
   );
   overflow: hidden;
 }
@@ -131,8 +128,7 @@ button.ds-logo {
     calc(100% - var(--ds-pixel-corner-depth)) var(--ds-pixel-corner-depth),
     100% var(--ds-pixel-corner-depth),
     100% calc(100% - var(--ds-pixel-corner-depth)),
-    calc(100% - var(--ds-pixel-corner-depth))
-      calc(100% - var(--ds-pixel-corner-depth)),
+    calc(100% - var(--ds-pixel-corner-depth)) calc(100% - var(--ds-pixel-corner-depth)),
     calc(100% - var(--ds-pixel-corner-depth)) 100%,
     var(--ds-pixel-corner-depth) 100%,
     var(--ds-pixel-corner-depth) calc(100% - var(--ds-pixel-corner-depth)),
@@ -217,11 +213,7 @@ button.ds-logo {
 }
 
 .ds-text-button[data-variant="danger"] {
-  border-color: color-mix(
-    in srgb,
-    var(--ds-color-danger) 28%,
-    var(--ds-color-border)
-  );
+  border-color: color-mix(in srgb, var(--ds-color-danger) 28%, var(--ds-color-border));
   color: var(--ds-color-danger);
 }
 
@@ -244,16 +236,14 @@ button.ds-logo {
   clip-path: polygon(
     var(--ds-action-button-corner-size) 0,
     calc(100% - var(--ds-action-button-corner-size)) 0,
-    calc(100% - var(--ds-action-button-corner-size))
-      var(--ds-action-button-corner-size),
+    calc(100% - var(--ds-action-button-corner-size)) var(--ds-action-button-corner-size),
     100% var(--ds-action-button-corner-size),
     100% calc(100% - var(--ds-action-button-corner-size)),
     calc(100% - var(--ds-action-button-corner-size))
       calc(100% - var(--ds-action-button-corner-size)),
     calc(100% - var(--ds-action-button-corner-size)) 100%,
     var(--ds-action-button-corner-size) 100%,
-    var(--ds-action-button-corner-size)
-      calc(100% - var(--ds-action-button-corner-size)),
+    var(--ds-action-button-corner-size) calc(100% - var(--ds-action-button-corner-size)),
     0 calc(100% - var(--ds-action-button-corner-size)),
     0 var(--ds-action-button-corner-size),
     var(--ds-action-button-corner-size) var(--ds-action-button-corner-size)
@@ -818,8 +808,7 @@ button.ds-logo {
 }
 
 .ds-dialog-surface {
-  display: grid;
-  gap: 18px;
+  position: relative;
   width: min(100%, 320px);
   max-height: min(620px, calc(100dvh - 36px));
   overflow: auto;
@@ -830,16 +819,10 @@ button.ds-logo {
   padding: 20px;
 }
 
-.ds-dialog-header {
-  display: flex;
-  align-items: end;
-  width: 100%;
-  justify-content: space-between;
-  gap: 16px;
-}
-
 .ds-dialog-close-button {
-  margin-left: auto;
+  position: absolute;
+  top: 20px;
+  right: 20px;
 }
 
 .ds-dialog-title {
@@ -851,6 +834,7 @@ button.ds-logo {
 .ds-dialog-content {
   color: var(--ds-color-muted-text);
   line-height: 1.6;
+  padding-block-start: 52px;
 }
 
 .ds-dialog-content p {
@@ -883,8 +867,7 @@ button.ds-logo {
 
   .ds-mobile-app-frame {
     min-height: calc(
-      100dvh - var(--ds-mobile-app-page-padding-compact) -
-        var(--ds-mobile-app-page-padding-compact)
+      100dvh - var(--ds-mobile-app-page-padding-compact) - var(--ds-mobile-app-page-padding-compact)
     );
   }
 }

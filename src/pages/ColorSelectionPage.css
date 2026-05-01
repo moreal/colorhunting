@@ -9,8 +9,7 @@
   --ds-mobile-app-frame-min-height: var(--color-selection-panel-min-height);
   grid-template-rows: auto 1fr;
   background: #242526;
-  padding: var(--color-selection-panel-padding-top)
-    var(--color-selection-panel-padding-x)
+  padding: var(--color-selection-panel-padding-top) var(--color-selection-panel-padding-x)
     var(--color-selection-panel-padding-bottom);
 }
 
@@ -18,8 +17,7 @@
   position: relative;
   display: grid;
   min-height: calc(
-    var(--color-selection-info-button-top) +
-      var(--color-selection-logo-height) + 3px
+    var(--color-selection-info-button-top) + var(--color-selection-logo-height) + 3px
   );
   justify-items: center;
   min-width: 0;

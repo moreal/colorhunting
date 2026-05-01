@@ -31,9 +31,7 @@ export function InfoPopup({
     }
 
     previousFocusRef.current =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeButtonRef.current?.focus();
 
     function handleKeyDown(event: KeyboardEvent) {
@@ -88,14 +86,12 @@ export function InfoPopup({
               ease: [0.2, 0, 0, 1],
             }}
           >
-            <div className="ds-dialog-header">
-              <CloseButton
-                className="ds-dialog-close-button"
-                label={closeLabel}
-                onClick={onClose}
-                ref={closeButtonRef}
-              />
-            </div>
+            <CloseButton
+              className="ds-dialog-close-button"
+              label={closeLabel}
+              onClick={onClose}
+              ref={closeButtonRef}
+            />
             <div className="ds-dialog-content">{children}</div>
           </motion.section>
         </motion.div>
@@ -113,19 +109,14 @@ const FOCUSABLE_SELECTOR = [
   "[tabindex]:not([tabindex='-1'])",
 ].join(",");
 
-function trapDialogFocus(
-  event: KeyboardEvent,
-  dialogElement: HTMLElement | null,
-) {
+function trapDialogFocus(event: KeyboardEvent, dialogElement: HTMLElement | null) {
   if (dialogElement === null) {
     return;
   }
 
   const focusableElements = Array.from(
     dialogElement.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-  ).filter(
-    (element) => !element.hasAttribute("disabled") && element.tabIndex !== -1,
-  );
+  ).filter((element) => !element.hasAttribute("disabled") && element.tabIndex !== -1);
   const firstElement = focusableElements[0];
   const lastElement = focusableElements.at(-1);
 
