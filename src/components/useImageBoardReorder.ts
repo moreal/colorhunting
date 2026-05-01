@@ -178,6 +178,148 @@ export function useImageBoardReorder({
     [clearDragAfterSettle, setNextDragState],
   );
 
+  const moveActiveDrag = useCallback(
+    (pointerId: number, point: Point) => {
+      const state = dragStateRef.current;
+
+      if (state === null || state.pointerId !== pointerId || state.phase !== "dragging") {
+        return false;
+      }
+
+      if (canRemoveImages && isPointInRemoveDropTarget(point, getRemoveDropTargetRect)) {
+        setPreviewSlots(boardSlotsRef.current);
+        setNextDragState({
+          ...state,
+          dropIndex: null,
+          isOverRemoveTarget: true,
+          pointer: point,
+        });
+        return true;
+      }
+
+      if (!canReorder) {
+        setPreviewSlots(boardSlotsRef.current);
+        setNextDragState({
+          ...state,
+          dropIndex: null,
+          isOverRemoveTarget: false,
+          pointer: point,
+        });
+        return true;
+      }
+
+      const dropIndex = getSlotIndexAtPoint(point, state.slotRects);
+
+      if (dropIndex === null) {
+        setPreviewSlots(boardSlotsRef.current);
+        setNextDragState({ ...state, dropIndex, isOverRemoveTarget: false, pointer: point });
+        return true;
+      }
+
+      if (dropIndex === state.dropIndex && !state.isOverRemoveTarget) {
+        setNextDragState({ ...state, pointer: point });
+        return true;
+      }
+
+      const nextSlots = moveBoardSlot(boardSlotsRef.current, state.originIndex, dropIndex);
+
+      if (nextSlots === null) {
+        setPreviewSlots(boardSlotsRef.current);
+        setNextDragState({
+          ...state,
+          dropIndex: null,
+          isOverRemoveTarget: false,
+          pointer: point,
+        });
+        return true;
+      }
+
+      setPreviewSlots(nextSlots);
+      setNextDragState({
+        ...state,
+        dropIndex,
+        isOverRemoveTarget: false,
+        pointer: point,
+      });
+      return true;
+    },
+    [canRemoveImages, canReorder, getRemoveDropTargetRect, setNextDragState],
+  );
+
+  const finishActiveDrag = useCallback(
+    (pointerId: number, point: Point) => {
+      const state = dragStateRef.current;
+
+      if (state === null || state.pointerId !== pointerId || state.phase !== "dragging") {
+        return false;
+      }
+
+      if (canRemoveImages && isPointInRemoveDropTarget(point, getRemoveDropTargetRect)) {
+        setPreviewSlots(boardSlotsRef.current);
+        setNextDragState({
+          ...state,
+          dropIndex: null,
+          isOverRemoveTarget: true,
+          phase: "settling",
+          pointer: point,
+        });
+
+        void commitRemove(state, onRemoveImage, returnDragToOrigin, clearDragAfterSettle);
+        return true;
+      }
+
+      if (!canReorder) {
+        returnDragToOrigin(state);
+        return true;
+      }
+
+      if (state.dropIndex === null || state.dropIndex === state.originIndex) {
+        returnDragToOrigin(state);
+        return true;
+      }
+
+      const targetRect = state.slotRects[state.dropIndex];
+
+      if (targetRect === undefined) {
+        returnDragToOrigin(state);
+        return true;
+      }
+
+      setNextDragState({
+        ...state,
+        phase: "settling",
+        pointer: getPointForSlot(targetRect, state.pointerOffset),
+      });
+
+      void commitReorder(state, onReorderImages, returnDragToOrigin, clearDragAfterSettle);
+      return true;
+    },
+    [
+      canRemoveImages,
+      canReorder,
+      clearDragAfterSettle,
+      getRemoveDropTargetRect,
+      onRemoveImage,
+      onReorderImages,
+      returnDragToOrigin,
+      setNextDragState,
+    ],
+  );
+
+  const cancelActiveDrag = useCallback(
+    (pointerId: number) => {
+      const state = dragStateRef.current;
+
+      if (state === null || state.pointerId !== pointerId || state.phase !== "dragging") {
+        return false;
+      }
+
+      returnDragToOrigin(state);
+      return true;
+    },
+    [returnDragToOrigin],
+  );
+
   const beginDrag = useCallback(
     (slotIndex: number, pointerId: number, pointer: Point) => {
       const image = boardSlotsRef.current[slotIndex];
@@ -274,64 +416,9 @@ export function useImageBoardReorder({
       }
 
       event.preventDefault();
-
-      if (canRemoveImages && isPointInRemoveDropTarget(point, getRemoveDropTargetRect)) {
-        setPreviewSlots(boardSlotsRef.current);
-        setNextDragState({
-          ...state,
-          dropIndex: null,
-          isOverRemoveTarget: true,
-          pointer: point,
-        });
-        return;
-      }
-
-      if (!canReorder) {
-        setPreviewSlots(boardSlotsRef.current);
-        setNextDragState({
-          ...state,
-          dropIndex: null,
-          isOverRemoveTarget: false,
-          pointer: point,
-        });
-        return;
-      }
-
-      const dropIndex = getSlotIndexAtPoint(point, state.slotRects);
-
-      if (dropIndex === null) {
-        setPreviewSlots(boardSlotsRef.current);
-        setNextDragState({ ...state, dropIndex, isOverRemoveTarget: false, pointer: point });
-        return;
-      }
-
-      if (dropIndex === state.dropIndex && !state.isOverRemoveTarget) {
-        setNextDragState({ ...state, pointer: point });
-        return;
-      }
-
-      const nextSlots = moveBoardSlot(boardSlotsRef.current, state.originIndex, dropIndex);
-
-      if (nextSlots === null) {
-        setPreviewSlots(boardSlotsRef.current);
-        setNextDragState({
-          ...state,
-          dropIndex: null,
-          isOverRemoveTarget: false,
-          pointer: point,
-        });
-        return;
-      }
-
-      setPreviewSlots(nextSlots);
-      setNextDragState({
-        ...state,
-        dropIndex,
-        isOverRemoveTarget: false,
-        pointer: point,
-      });
+      moveActiveDrag(event.pointerId, point);
     },
-    [canRemoveImages, canReorder, getRemoveDropTargetRect, setNextDragState],
+    [moveActiveDrag],
   );
 
   const handlePointerEnd = useCallback(
@@ -351,58 +438,9 @@ export function useImageBoardReorder({
       }
 
       event.currentTarget.releasePointerCapture?.(event.pointerId);
-
-      const point = getEventPoint(event);
-
-      if (canRemoveImages && isPointInRemoveDropTarget(point, getRemoveDropTargetRect)) {
-        setPreviewSlots(boardSlotsRef.current);
-        setNextDragState({
-          ...state,
-          dropIndex: null,
-          isOverRemoveTarget: true,
-          phase: "settling",
-          pointer: point,
-        });
-
-        void commitRemove(state, onRemoveImage, returnDragToOrigin, clearDragAfterSettle);
-        return;
-      }
-
-      if (!canReorder) {
-        returnDragToOrigin(state);
-        return;
-      }
-
-      if (state.dropIndex === null || state.dropIndex === state.originIndex) {
-        returnDragToOrigin(state);
-        return;
-      }
-
-      const targetRect = state.slotRects[state.dropIndex];
-
-      if (targetRect === undefined) {
-        returnDragToOrigin(state);
-        return;
-      }
-
-      setNextDragState({
-        ...state,
-        phase: "settling",
-        pointer: getPointForSlot(targetRect, state.pointerOffset),
-      });
-
-      void commitReorder(state, onReorderImages, returnDragToOrigin, clearDragAfterSettle);
+      finishActiveDrag(event.pointerId, getEventPoint(event));
     },
-    [
-      canRemoveImages,
-      canReorder,
-      clearDragAfterSettle,
-      getRemoveDropTargetRect,
-      onRemoveImage,
-      onReorderImages,
-      returnDragToOrigin,
-      setNextDragState,
-    ],
+    [finishActiveDrag],
   );
 
   const handlePointerCancel = useCallback(
@@ -422,10 +460,58 @@ export function useImageBoardReorder({
       }
 
       event.currentTarget.releasePointerCapture?.(event.pointerId);
-      returnDragToOrigin(state);
+      cancelActiveDrag(event.pointerId);
     },
-    [returnDragToOrigin],
+    [cancelActiveDrag],
   );
+
+  useEffect(() => {
+    if (dragState?.phase !== "dragging") {
+      return;
+    }
+
+    const pointerId = dragState.pointerId;
+
+    const handleWindowPointerMove = (event: PointerEvent) => {
+      if (event.pointerId !== pointerId) {
+        return;
+      }
+
+      if (moveActiveDrag(event.pointerId, getEventPoint(event))) {
+        event.preventDefault();
+      }
+    };
+
+    const handleWindowPointerEnd = (event: PointerEvent) => {
+      if (event.pointerId !== pointerId) {
+        return;
+      }
+
+      if (finishActiveDrag(event.pointerId, getEventPoint(event))) {
+        event.preventDefault();
+      }
+    };
+
+    const handleWindowPointerCancel = (event: PointerEvent) => {
+      if (event.pointerId !== pointerId) {
+        return;
+      }
+
+      if (cancelActiveDrag(event.pointerId)) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener("pointermove", handleWindowPointerMove, { passive: false });
+    window.addEventListener("pointerup", handleWindowPointerEnd);
+    window.addEventListener("pointercancel", handleWindowPointerCancel);
+
+    return () => {
+      window.removeEventListener("pointermove", handleWindowPointerMove);
+      window.removeEventListener("pointerup", handleWindowPointerEnd);
+      window.removeEventListener("pointercancel", handleWindowPointerCancel);
+    };
+  }, [cancelActiveDrag, dragState?.phase, dragState?.pointerId, finishActiveDrag, moveActiveDrag]);
 
   const moveImageWithKeyboard = useCallback(
     (fromIndex: number, toIndex: number) => {
@@ -548,7 +634,7 @@ function getGridSlotAnimation(isDraggingSlot: boolean) {
   };
 }
 
-function getEventPoint(event: ReactPointerEvent<HTMLDivElement>): Point {
+function getEventPoint(event: { clientX: number; clientY: number }): Point {
   return {
     x: event.clientX,
     y: event.clientY,

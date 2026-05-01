@@ -11,6 +11,7 @@ import {
   dropSlotDragAt,
   dropSlotDragAtPoint,
   dropSlotDragOutside,
+  dropWindowSlotDragAtPoint,
   getImageBoardSlotFrames,
   getImageBoardSlotGroups,
   mockElementRect,
@@ -19,6 +20,7 @@ import {
   moveSlotDragOutside,
   moveSlotDragToPoint,
   moveSlotDragTo,
+  moveWindowSlotDragToPoint,
   startSlotPress,
   waitForSlotDragSettle,
 } from "../test/imageBoardDrag";
@@ -488,6 +490,60 @@ describe("design system components", () => {
     );
 
     await waitForSlotDragSettle();
+    expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
+      "data-reordering",
+    );
+  });
+
+  it("이미지 보드는 위쪽 슬롯을 삭제 영역까지 끌 때 보드 밖 포인터 이동도 계속 추적한다", async () => {
+    vi.useFakeTimers();
+    const onDragStatusChange =
+      vi.fn<(status: { active: boolean; overRemoveTarget: boolean }) => void>();
+    const onRemoveImage = vi.fn<(slotIndex: number) => boolean>(() => true);
+    let removeTarget: HTMLDivElement | null = null;
+    render(
+      <>
+        <ImageBoard
+          getRemoveDropTargetRect={() => removeTarget?.getBoundingClientRect() ?? null}
+          images={[createSampleImage(1), createSampleImage(2), createSampleImage(3)]}
+          onDragStatusChange={onDragStatusChange}
+          onRemoveImage={onRemoveImage}
+        />
+        <div
+          ref={(element) => {
+            removeTarget = element;
+          }}
+        />
+      </>,
+    );
+    if (removeTarget === null) {
+      throw new Error("Remove drop target must be rendered.");
+    }
+    mockElementRect(removeTarget, 0, 560, 300, 120);
+    const slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
+
+    beginLongPressSlotDrag(slotFrames, 0);
+    moveWindowSlotDragToPoint({ x: 150, y: 600 });
+
+    expect(onDragStatusChange).toHaveBeenLastCalledWith({
+      active: true,
+      overRemoveTarget: true,
+    });
+
+    dropWindowSlotDragAtPoint({ x: 150, y: 600 });
+    await act(async () => {});
+
+    expect(onRemoveImage).toHaveBeenCalledWith(0);
+    expect(screen.getByRole("group", { name: /Image board/ })).toHaveAttribute(
+      "data-reordering",
+      "settling",
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+    });
+    vi.useRealTimers();
     expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
       "data-reordering",
     );

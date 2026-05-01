@@ -139,6 +139,14 @@ export function moveSlotDragToPoint(
   });
 }
 
+export function moveWindowSlotDragToPoint(point: { x: number; y: number }) {
+  fireEvent.pointerMove(window, {
+    clientX: point.x,
+    clientY: point.y,
+    pointerId: 1,
+  });
+}
+
 export function dropSlotDragAt(
   slotFrames: readonly HTMLElement[],
   fromIndex: number,
@@ -159,6 +167,14 @@ export function dropSlotDragAtPoint(
   point: { x: number; y: number },
 ) {
   fireEvent.pointerUp(slotFrames[fromIndex], {
+    clientX: point.x,
+    clientY: point.y,
+    pointerId: 1,
+  });
+}
+
+export function dropWindowSlotDragAtPoint(point: { x: number; y: number }) {
+  fireEvent.pointerUp(window, {
     clientX: point.x,
     clientY: point.y,
     pointerId: 1,

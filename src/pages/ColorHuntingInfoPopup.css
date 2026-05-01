@@ -2,13 +2,15 @@
   display: grid;
   gap: 18px;
   font-family: var(--ds-font-family-display);
-  font-size: 15px;
+  font-size: 20px;
   line-height: 1.55;
   letter-spacing: 0;
+
+  color: #000000;
 }
 
 .color-hunting-info-privacy {
-  color: #384658;
+  color: #7d7d7d;
 }
 
 .color-hunting-profile-links {

@@ -31,11 +31,11 @@
   --ds-color-card-orange: #fe931b;
   --ds-color-card-red: #ef4b4b;
   --ds-font-family-display:
-    "NeoDunggeunmo Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    monospace;
+    "NeoDunggeunmo Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
   --ds-font-family-pixel:
-    "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    monospace;
+    "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
   --ds-color-card-max-width: 146.61px;
   --ds-color-card-max-height: 174px;
   --ds-color-card-swatch-size: 120.83px;
@@ -63,6 +63,7 @@
   background: transparent;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   color: var(--ds-color-text);
   font-weight: 800;
   padding: 0;
@@ -75,7 +76,7 @@ button.ds-logo {
 
 .ds-logo-image {
   display: block;
-  width: min(100%, 377px);
+  width: max(100%, 377px);
   height: auto;
 }
 
@@ -94,14 +95,17 @@ button.ds-logo {
   display: grid;
   place-items: center;
   background: #f0f1f5;
-  padding: var(--ds-mobile-app-page-padding);
+  /*padding: var(--ds-mobile-app-page-padding);*/
 }
 
 .ds-mobile-app-frame {
-  width: min(100%, var(--ds-mobile-app-frame-width));
+  /*width: min(100%, var(--ds-mobile-app-frame-width));*/
   min-height: min(
     var(--ds-mobile-app-frame-min-height),
-    calc(100dvh - var(--ds-mobile-app-page-padding) - var(--ds-mobile-app-page-padding))
+    calc(
+      100dvh - var(--ds-mobile-app-page-padding) -
+        var(--ds-mobile-app-page-padding)
+    )
   );
   overflow: hidden;
 }
@@ -127,7 +131,8 @@ button.ds-logo {
     calc(100% - var(--ds-pixel-corner-depth)) var(--ds-pixel-corner-depth),
     100% var(--ds-pixel-corner-depth),
     100% calc(100% - var(--ds-pixel-corner-depth)),
-    calc(100% - var(--ds-pixel-corner-depth)) calc(100% - var(--ds-pixel-corner-depth)),
+    calc(100% - var(--ds-pixel-corner-depth))
+      calc(100% - var(--ds-pixel-corner-depth)),
     calc(100% - var(--ds-pixel-corner-depth)) 100%,
     var(--ds-pixel-corner-depth) 100%,
     var(--ds-pixel-corner-depth) calc(100% - var(--ds-pixel-corner-depth)),
@@ -212,7 +217,11 @@ button.ds-logo {
 }
 
 .ds-text-button[data-variant="danger"] {
-  border-color: color-mix(in srgb, var(--ds-color-danger) 28%, var(--ds-color-border));
+  border-color: color-mix(
+    in srgb,
+    var(--ds-color-danger) 28%,
+    var(--ds-color-border)
+  );
   color: var(--ds-color-danger);
 }
 
@@ -235,14 +244,16 @@ button.ds-logo {
   clip-path: polygon(
     var(--ds-action-button-corner-size) 0,
     calc(100% - var(--ds-action-button-corner-size)) 0,
-    calc(100% - var(--ds-action-button-corner-size)) var(--ds-action-button-corner-size),
+    calc(100% - var(--ds-action-button-corner-size))
+      var(--ds-action-button-corner-size),
     100% var(--ds-action-button-corner-size),
     100% calc(100% - var(--ds-action-button-corner-size)),
     calc(100% - var(--ds-action-button-corner-size))
       calc(100% - var(--ds-action-button-corner-size)),
     calc(100% - var(--ds-action-button-corner-size)) 100%,
     var(--ds-action-button-corner-size) 100%,
-    var(--ds-action-button-corner-size) calc(100% - var(--ds-action-button-corner-size)),
+    var(--ds-action-button-corner-size)
+      calc(100% - var(--ds-action-button-corner-size)),
     0 calc(100% - var(--ds-action-button-corner-size)),
     0 var(--ds-action-button-corner-size),
     var(--ds-action-button-corner-size) var(--ds-action-button-corner-size)
@@ -821,9 +832,14 @@ button.ds-logo {
 
 .ds-dialog-header {
   display: flex;
-  align-items: start;
+  align-items: end;
+  width: 100%;
   justify-content: space-between;
   gap: 16px;
+}
+
+.ds-dialog-close-button {
+  margin-left: auto;
 }
 
 .ds-dialog-title {
@@ -858,15 +874,17 @@ button.ds-logo {
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 700px) {
   .ds-mobile-app-page {
     align-items: start;
-    padding: var(--ds-mobile-app-page-padding-compact);
+    place-items: unset;
+    /*padding: var(--ds-mobile-app-page-padding-compact);*/
   }
 
   .ds-mobile-app-frame {
     min-height: calc(
-      100dvh - var(--ds-mobile-app-page-padding-compact) - var(--ds-mobile-app-page-padding-compact)
+      100dvh - var(--ds-mobile-app-page-padding-compact) -
+        var(--ds-mobile-app-page-padding-compact)
     );
   }
 }

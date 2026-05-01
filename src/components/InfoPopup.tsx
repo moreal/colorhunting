@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { classNames } from "./classNames";
 import { CloseButton } from "./CloseButton";
@@ -20,7 +20,6 @@ export function InfoPopup({
   open,
   title,
 }: InfoPopupProps) {
-  const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -32,7 +31,9 @@ export function InfoPopup({
     }
 
     previousFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     closeButtonRef.current?.focus();
 
     function handleKeyDown(event: KeyboardEvent) {
@@ -62,24 +63,38 @@ export function InfoPopup({
           className="ds-dialog-backdrop"
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: [0.2, 0, 0, 1] }}
+          transition={{
+            duration: shouldReduceMotion ? 0 : 0.18,
+            ease: [0.2, 0, 0, 1],
+          }}
         >
           <motion.section
             animate={{ scale: 1, y: 0 }}
-            aria-labelledby={titleId}
+            aria-label={title}
             aria-modal="true"
             className={classNames("ds-dialog-surface", className)}
-            exit={{ scale: shouldReduceMotion ? 1 : 0.98, y: shouldReduceMotion ? 0 : 8 }}
-            initial={{ scale: shouldReduceMotion ? 1 : 0.98, y: shouldReduceMotion ? 0 : 8 }}
+            exit={{
+              scale: shouldReduceMotion ? 1 : 0.98,
+              y: shouldReduceMotion ? 0 : 8,
+            }}
+            initial={{
+              scale: shouldReduceMotion ? 1 : 0.98,
+              y: shouldReduceMotion ? 0 : 8,
+            }}
             ref={dialogRef}
             role="dialog"
-            transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: [0.2, 0, 0, 1] }}
+            transition={{
+              duration: shouldReduceMotion ? 0 : 0.18,
+              ease: [0.2, 0, 0, 1],
+            }}
           >
             <div className="ds-dialog-header">
-              <h2 className="ds-dialog-title" id={titleId}>
-                {title}
-              </h2>
-              <CloseButton label={closeLabel} onClick={onClose} ref={closeButtonRef} />
+              <CloseButton
+                className="ds-dialog-close-button"
+                label={closeLabel}
+                onClick={onClose}
+                ref={closeButtonRef}
+              />
             </div>
             <div className="ds-dialog-content">{children}</div>
           </motion.section>
@@ -98,14 +113,19 @@ const FOCUSABLE_SELECTOR = [
   "[tabindex]:not([tabindex='-1'])",
 ].join(",");
 
-function trapDialogFocus(event: KeyboardEvent, dialogElement: HTMLElement | null) {
+function trapDialogFocus(
+  event: KeyboardEvent,
+  dialogElement: HTMLElement | null,
+) {
   if (dialogElement === null) {
     return;
   }
 
   const focusableElements = Array.from(
     dialogElement.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-  ).filter((element) => !element.hasAttribute("disabled") && element.tabIndex !== -1);
+  ).filter(
+    (element) => !element.hasAttribute("disabled") && element.tabIndex !== -1,
+  );
   const firstElement = focusableElements[0];
   const lastElement = focusableElements.at(-1);
 

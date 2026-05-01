@@ -24,7 +24,7 @@
 }
 
 .image-board-logo {
-  width: min(100%, 270px);
+  /*width: min(100%, 270px);*/
   color: currentColor;
 }
 
