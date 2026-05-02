@@ -6,8 +6,13 @@ import {
 } from "./appState";
 
 export const BOARD_EXPORT_WIDTH = 3024;
-export const BOARD_EXPORT_HEIGHT = 3024;
+export const BOARD_EXPORT_HEIGHT = 4032;
 export const BOARD_EXPORT_MIME_TYPE = "image/png";
+
+const BOARD_EXPORT_COLUMNS = 3;
+const BOARD_EXPORT_ROWS = 3;
+const BOARD_EXPORT_ASPECT_WIDTH = 3;
+const BOARD_EXPORT_ASPECT_HEIGHT = 4;
 
 export type BoardExportMimeType = "image/png" | "image/jpeg" | "image/webp";
 
@@ -30,7 +35,8 @@ export type ComposeBoardImageOptions = {
 };
 
 type BoardExportLayout = {
-  cellSize: number;
+  cellHeight: number;
+  cellWidth: number;
   height: number;
   width: number;
 };
@@ -92,16 +98,28 @@ function validateBoardImages(images: readonly BoardSlot[]): BoardSlot[] {
 }
 
 function createBoardExportLayout(options: ComposeBoardImageOptions): BoardExportLayout {
-  const size = options.width ?? options.height ?? BOARD_EXPORT_WIDTH;
-  const width = options.width ?? size;
-  const height = options.height ?? size;
+  const width =
+    options.width ??
+    Math.round(
+      ((options.height ?? BOARD_EXPORT_HEIGHT) * BOARD_EXPORT_ASPECT_WIDTH) /
+        BOARD_EXPORT_ASPECT_HEIGHT,
+    );
+  const height =
+    options.height ?? Math.round((width * BOARD_EXPORT_ASPECT_HEIGHT) / BOARD_EXPORT_ASPECT_WIDTH);
 
-  if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height !== width) {
-    throw new Error("Board export dimensions must be positive square integers.");
+  if (
+    !Number.isInteger(width) ||
+    !Number.isInteger(height) ||
+    width <= 0 ||
+    height <= 0 ||
+    width * BOARD_EXPORT_ASPECT_HEIGHT !== height * BOARD_EXPORT_ASPECT_WIDTH
+  ) {
+    throw new Error("Board export dimensions must be positive 3:4 integers.");
   }
 
   return {
-    cellSize: width / 3,
+    cellHeight: height / BOARD_EXPORT_ROWS,
+    cellWidth: width / BOARD_EXPORT_COLUMNS,
     height,
     width,
   };
@@ -113,38 +131,51 @@ function drawBoardSlots(
   images: readonly (CanvasImageSource | null)[],
 ) {
   for (let slotIndex = 0; slotIndex < BOARD_SLOT_COUNT; slotIndex += 1) {
-    const column = slotIndex % 3;
-    const row = Math.floor(slotIndex / 3);
-    const x = column * layout.cellSize;
-    const y = row * layout.cellSize;
+    const column = slotIndex % BOARD_EXPORT_COLUMNS;
+    const row = Math.floor(slotIndex / BOARD_EXPORT_COLUMNS);
+    const x = column * layout.cellWidth;
+    const y = row * layout.cellHeight;
     const image = images[slotIndex];
 
-    drawEmptySlot(context, x, y, layout.cellSize);
+    drawEmptySlot(context, x, y, layout.cellWidth, layout.cellHeight);
 
     if (image !== null) {
-      drawCoverImage(context, image, x, y, layout.cellSize, layout.cellSize);
+      drawCoverImage(context, image, x, y, layout.cellWidth, layout.cellHeight);
     }
   }
 }
 
-function drawEmptySlot(context: CanvasRenderingContext2D, x: number, y: number, size: number) {
-  const checkerSize = size / 12;
+function drawEmptySlot(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const checkerSize = Math.min(width, height) / 12;
+  const columns = Math.ceil(width / checkerSize);
+  const rows = Math.ceil(height / checkerSize);
 
   context.fillStyle = "#ffffff";
-  context.fillRect(x, y, size, size);
+  context.fillRect(x, y, width, height);
 
   context.fillStyle = "#efefef";
-  for (let row = 0; row < 12; row += 1) {
-    for (let column = 0; column < 12; column += 1) {
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
       if ((row + column) % 2 === 0) {
-        context.fillRect(x + column * checkerSize, y + row * checkerSize, checkerSize, checkerSize);
+        const checkerX = x + column * checkerSize;
+        const checkerY = y + row * checkerSize;
+        const checkerWidth = Math.min(checkerSize, x + width - checkerX);
+        const checkerHeight = Math.min(checkerSize, y + height - checkerY);
+
+        context.fillRect(checkerX, checkerY, checkerWidth, checkerHeight);
       }
     }
   }
 
   context.strokeStyle = "rgba(0, 0, 0, 0.08)";
-  context.lineWidth = Math.max(2, size * 0.006);
-  context.strokeRect(x, y, size, size);
+  context.lineWidth = Math.max(2, Math.min(width, height) * 0.006);
+  context.strokeRect(x, y, width, height);
 }
 
 function drawCoverImage(
