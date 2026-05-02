@@ -40,6 +40,10 @@ export const designTokens = {
     pixelCorner: {
       depth: "2px",
     },
+    pageLogo: {
+      height: "69px",
+      width: "377px",
+    },
     colorCard: {
       maxWidth: "146.61px",
       maxHeight: "174px",
@@ -58,8 +62,6 @@ export const designTokens = {
       copyLineHeight: "1.5",
       infoButtonRight: "16px",
       infoButtonTop: "64px",
-      logoHeight: "69px",
-      logoWidth: "337px",
       panelMinHeight: "844px",
       panelPaddingBottom: "72px",
       panelPaddingTop: "88px",

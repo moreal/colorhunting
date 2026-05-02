@@ -4,7 +4,7 @@
 
 .image-board-shell {
   display: grid;
-  grid-template-rows: clamp(150px, 22dvh, 184px) auto minmax(116px, 1fr);
+  grid-template-rows: clamp(160px, 22dvh, 184px) auto minmax(116px, 1fr);
   background: #ffffff;
 }
 
@@ -15,34 +15,40 @@
 }
 
 .image-board-header {
-  position: relative;
   display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  grid-template-rows: var(--ds-page-logo-height) 40px;
   align-content: center;
+  align-items: center;
   justify-items: center;
-  gap: 16px;
-  padding: 34px 26px 18px;
+  column-gap: 0;
+  row-gap: 8px;
+  padding: 24px 6px 11px;
 }
 
 .image-board-logo {
-  /*width: min(100%, 270px);*/
+  grid-column: 1 / -1;
+  grid-row: 1;
+  max-width: 100%;
   color: currentColor;
 }
 
 .image-board-title {
+  grid-column: 2;
+  grid-row: 2;
   margin: 0;
   font-family: var(--ds-font-family-pixel);
   font-size: 18px;
   font-weight: 400;
-  line-height: 1;
+  line-height: 1.25;
   letter-spacing: 0;
   text-align: center;
   text-transform: uppercase;
 }
 
 .image-board-info-button {
-  position: absolute;
-  right: 22px;
-  bottom: 24px;
+  grid-column: 3;
+  grid-row: 2;
   border: 0;
   background: transparent;
   color: currentColor;
@@ -93,7 +99,7 @@
 .image-board-footer {
   display: grid;
   align-content: center;
-  padding: 14px 12px 12px;
+  padding: 14px 12px calc(12px + env(safe-area-inset-bottom, 0px));
 }
 
 .image-board-download-motion {
@@ -118,10 +124,6 @@
 
 @media (max-width: 420px) {
   .image-board-header {
-    padding-inline: 22px;
-  }
-
-  .image-board-logo {
-    width: min(100%, 238px);
+    padding-inline: 6px;
   }
 }

@@ -48,6 +48,45 @@ describe("ImageBoardPage", () => {
     expect(screen.getByText("아직 비어있어요...")).toBeVisible();
   });
 
+  it("헤더 로고와 제목은 고정 헤더의 패딩 안쪽에 맞는 크기 규칙을 가진다", () => {
+    render(
+      <ImageBoardPage
+        state={createBoardState({
+          color: designTokens.color.colorCard.blue,
+        })}
+      />,
+    );
+
+    const logo = screen.getByRole("button", { name: "Choose current color again" });
+    const logoImage = logo.querySelector(".ds-logo-image");
+
+    if (!(logoImage instanceof HTMLImageElement)) {
+      throw new Error("Image board logo image must be rendered.");
+    }
+
+    expect(logo).toHaveClass("ds-page-logo");
+    expect(screen.getByRole("main")).toHaveStyle({
+      "--ds-page-logo-height": designTokens.component.pageLogo.height,
+      "--ds-page-logo-width": designTokens.component.pageLogo.width,
+    });
+    expect(getCssRuleStyle(".ds-page-logo").getPropertyValue("width")).toBe(
+      "min(100%, var(--ds-page-logo-width, 377px))",
+    );
+    expect(getCssRuleStyle(".ds-page-logo").getPropertyValue("height")).toBe(
+      "var(--ds-page-logo-height, 69px)",
+    );
+    expect(getCssRuleStyle(".ds-page-logo .ds-logo-image").getPropertyValue("width")).toBe("100%");
+    expect(getCssRuleStyle(".image-board-header").getPropertyValue("grid-template-columns")).toBe(
+      "40px minmax(0, 1fr) 40px",
+    );
+    expect(getCssRuleStyle(".image-board-header").getPropertyValue("padding")).toBe(
+      "24px 6px 11px",
+    );
+    expect(getCssRuleStyle(".image-board-logo").getPropertyValue("max-width")).toBe("100%");
+    expect(getCssRuleStyle(".image-board-info-button").getPropertyValue("grid-column")).toBe("3");
+    expect(getCssRuleStyle(".image-board-title").getPropertyValue("line-height")).toBe("1.25");
+  });
+
   it("로고 버튼은 현재 보드 상태로 색상 선택 복귀를 요청한다", async () => {
     const user = userEvent.setup();
     const onResetFlow = vi.fn<(state: ColorDeterminedAppState) => void>();
@@ -547,4 +586,16 @@ function createSampleImage(index: number): Image {
     mimeType: "image/png",
     name: `image-${index}.png`,
   };
+}
+
+function getCssRuleStyle(selectorText: string): CSSStyleDeclaration {
+  for (const styleSheet of document.styleSheets) {
+    for (const rule of Array.from(styleSheet.cssRules)) {
+      if (rule instanceof CSSStyleRule && rule.selectorText === selectorText) {
+        return rule.style;
+      }
+    }
+  }
+
+  throw new Error(`Expected CSS rule for ${selectorText}.`);
 }

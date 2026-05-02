@@ -80,6 +80,18 @@ button.ds-logo {
   height: auto;
 }
 
+.ds-page-logo {
+  width: min(100%, var(--ds-page-logo-width, 377px));
+  height: var(--ds-page-logo-height, 69px);
+  min-width: 0;
+  color: currentColor;
+}
+
+.ds-page-logo .ds-logo-image {
+  width: 100%;
+  height: auto;
+}
+
 .ds-visually-hidden {
   position: absolute;
   width: 1px;
@@ -91,15 +103,20 @@ button.ds-logo {
 }
 
 .ds-mobile-app-page {
+  min-height: 100vh;
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  background: #f0f1f5;
+  background: var(--ds-mobile-app-page-background, #f0f1f5);
   /*padding: var(--ds-mobile-app-page-padding);*/
 }
 
 .ds-mobile-app-frame {
   /*width: min(100%, var(--ds-mobile-app-frame-width));*/
+  min-height: min(
+    var(--ds-mobile-app-frame-min-height),
+    calc(100vh - var(--ds-mobile-app-page-padding) - var(--ds-mobile-app-page-padding))
+  );
   min-height: min(
     var(--ds-mobile-app-frame-min-height),
     calc(100dvh - var(--ds-mobile-app-page-padding) - var(--ds-mobile-app-page-padding))
@@ -870,6 +887,9 @@ button.ds-logo {
   }
 
   .ds-mobile-app-frame {
+    min-height: calc(
+      100vh - var(--ds-mobile-app-page-padding-compact) - var(--ds-mobile-app-page-padding-compact)
+    );
     min-height: calc(
       100dvh - var(--ds-mobile-app-page-padding-compact) - var(--ds-mobile-app-page-padding-compact)
     );

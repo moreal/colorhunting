@@ -27,5 +27,6 @@ export { ImageSlot, type ImageSlotProps } from "./ImageSlot";
 export { InfoButton, type InfoButtonProps } from "./InfoButton";
 export { InfoPopup, type InfoPopupProps } from "./InfoPopup";
 export { Logo, type LogoProps } from "./Logo";
+export { PageLogo, type PageLogoProps } from "./PageLogo";
 export { RemoveButton, RemoveButtonIcon, type RemoveButtonProps } from "./RemoveButton";
 export { ResetButton, type ResetButtonProps } from "./ResetButton";

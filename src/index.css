@@ -1,4 +1,5 @@
 :root {
+  --app-browser-chrome-background: #242526;
   font-family:
     Inter,
     ui-sans-serif,
@@ -15,9 +16,23 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  min-height: 100%;
+  background: var(--app-browser-chrome-background);
+}
+
 body {
   min-width: 320px;
+  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
+  background: var(--app-browser-chrome-background);
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--app-browser-chrome-background);
 }
 
 button,

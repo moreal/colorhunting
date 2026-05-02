@@ -31,6 +31,7 @@ describe("ColorSelectionPage", () => {
     expect(screen.queryByRole("link", { name: "Colorhunting home" })).not.toBeInTheDocument();
     expect(logo).toBeInTheDocument();
     expect(logo).toHaveAttribute("aria-hidden", "true");
+    expect(logo).toHaveClass("ds-page-logo");
     expect(screen.getByText(/오늘의 컬러를 발견하고/)).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "RED #ef4b4b" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Reset" })).toBeEnabled();
@@ -38,8 +39,8 @@ describe("ColorSelectionPage", () => {
     expect(screen.getByRole("button", { name: "컬러헌팅 정보 열기" })).toBeEnabled();
     expect(screen.getByRole("main")).toHaveStyle({
       "--color-selection-copy-font-size": designTokens.component.colorSelection.copyFontSize,
-      "--color-selection-logo-height": designTokens.component.colorSelection.logoHeight,
-      "--color-selection-logo-width": designTokens.component.colorSelection.logoWidth,
+      "--ds-page-logo-height": designTokens.component.pageLogo.height,
+      "--ds-page-logo-width": designTokens.component.pageLogo.width,
     });
   });
 

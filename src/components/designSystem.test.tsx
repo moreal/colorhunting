@@ -35,6 +35,7 @@ import { ImageSlot } from "./ImageSlot";
 import { InfoButton } from "./InfoButton";
 import { InfoPopup } from "./InfoPopup";
 import { Logo } from "./Logo";
+import { PageLogo } from "./PageLogo";
 import { RemoveButton } from "./RemoveButton";
 import { ResetButton } from "./ResetButton";
 
@@ -54,6 +55,15 @@ describe("design system components", () => {
     expect(screen.getByRole("link", { name: "Colorhunting home" })).toHaveTextContent(
       "Colorhunting",
     );
+  });
+
+  it("페이지 로고는 표준 페이지 로고 크기 클래스를 적용한다", () => {
+    render(<PageLogo inert />);
+
+    const logo = document.querySelector(".ds-page-logo");
+
+    expect(logo).toBeInTheDocument();
+    expect(logo).toHaveAttribute("aria-hidden", "true");
   });
 
   it("정보 버튼은 키보드로 실행할 수 있다", async () => {
@@ -245,6 +255,10 @@ describe("design system components", () => {
     expect(designTokens.component.pixelCorner).toEqual({
       depth: "2px",
     });
+    expect(designTokens.component.pageLogo).toEqual({
+      height: "69px",
+      width: "377px",
+    });
     expect(designTokens.component.colorCard).toEqual({
       glowBlur: "60px",
       glowOpacity: "0.5",
@@ -257,8 +271,6 @@ describe("design system components", () => {
     expect(designTokens.component.colorSelection).toMatchObject({
       cardFlipDurationSeconds: 0.16,
       copyFontSize: "20px",
-      logoHeight: "69px",
-      logoWidth: "337px",
     });
     expect(designTokens.color.colorCard).toEqual({
       blue: "#76D1FF",

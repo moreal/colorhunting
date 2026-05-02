@@ -6,9 +6,13 @@ import {
   type ColorSelectionOption,
   type PickColorOption,
 } from "../domain/colorSelection";
-import { ColorCard, ConfirmButton, InfoButton, Logo, ResetButton } from "../components";
+import { ColorCard, ConfirmButton, InfoButton, PageLogo, ResetButton } from "../components";
 import { designTokens } from "../designSystem/tokens";
 import { useColorSelectionController } from "../hooks/useColorSelectionController";
+import {
+  DEFAULT_BROWSER_CHROME_COLOR,
+  useBrowserChromeTheme,
+} from "../hooks/useBrowserChromeTheme";
 import { ColorHuntingInfoPopup } from "./ColorHuntingInfoPopup";
 import "../designSystem/styles.css";
 import "./ColorSelectionPage.css";
@@ -50,6 +54,7 @@ export function ColorSelectionPage({
     pickColorOption,
     saveConfirmedState,
   });
+  useBrowserChromeTheme(DEFAULT_BROWSER_CHROME_COLOR);
 
   return (
     <main
@@ -59,7 +64,7 @@ export function ColorSelectionPage({
     >
       <section className="ds-mobile-app-frame color-selection-panel">
         <header className="color-selection-header">
-          <Logo className="color-selection-logo" inert />
+          <PageLogo className="color-selection-logo" inert />
           <InfoButton
             className="color-selection-info-button"
             label="컬러헌팅 정보 열기"
@@ -128,13 +133,14 @@ type ColorSelectionPageStyle = CSSProperties & {
   "--color-selection-copy-line-height": string;
   "--color-selection-info-button-right": string;
   "--color-selection-info-button-top": string;
-  "--color-selection-logo-height": string;
-  "--color-selection-logo-width": string;
   "--color-selection-panel-min-height": string;
   "--color-selection-panel-padding-bottom": string;
   "--color-selection-panel-padding-top": string;
   "--color-selection-panel-padding-x": string;
   "--color-selection-panel-width": string;
+  "--ds-mobile-app-page-background": string;
+  "--ds-page-logo-height": string;
+  "--ds-page-logo-width": string;
 };
 
 const COLOR_SELECTION_PAGE_STYLE: ColorSelectionPageStyle = {
@@ -145,12 +151,13 @@ const COLOR_SELECTION_PAGE_STYLE: ColorSelectionPageStyle = {
   "--color-selection-copy-line-height": designTokens.component.colorSelection.copyLineHeight,
   "--color-selection-info-button-right": designTokens.component.colorSelection.infoButtonRight,
   "--color-selection-info-button-top": designTokens.component.colorSelection.infoButtonTop,
-  "--color-selection-logo-height": designTokens.component.colorSelection.logoHeight,
-  "--color-selection-logo-width": designTokens.component.colorSelection.logoWidth,
   "--color-selection-panel-min-height": designTokens.component.colorSelection.panelMinHeight,
   "--color-selection-panel-padding-bottom":
     designTokens.component.colorSelection.panelPaddingBottom,
   "--color-selection-panel-padding-top": designTokens.component.colorSelection.panelPaddingTop,
   "--color-selection-panel-padding-x": designTokens.component.colorSelection.panelPaddingX,
   "--color-selection-panel-width": designTokens.component.colorSelection.panelWidth,
+  "--ds-mobile-app-page-background": DEFAULT_BROWSER_CHROME_COLOR,
+  "--ds-page-logo-height": designTokens.component.pageLogo.height,
+  "--ds-page-logo-width": designTokens.component.pageLogo.width,
 };

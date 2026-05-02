@@ -7,9 +7,11 @@ import {
   DownloadBottomSheet,
   ImageBoard,
   InfoButton,
-  Logo,
+  PageLogo,
   type ImageBoardDragStatus,
 } from "../components";
+import { designTokens } from "../designSystem/tokens";
+import { useBrowserChromeTheme } from "../hooks/useBrowserChromeTheme";
 import {
   useImageBoardController,
   type BoardExportDescriptor,
@@ -79,6 +81,7 @@ export function ImageBoardPage({
     state,
     triggerDownload,
   });
+  useBrowserChromeTheme(currentState?.color.hex ?? null);
 
   const handleLogoClick = useCallback(() => {
     if (onResetFlow === undefined || currentState === null) {
@@ -97,6 +100,9 @@ export function ImageBoardPage({
   }
 
   const pageStyle: ImageBoardPageStyle = {
+    "--ds-mobile-app-page-background": currentState.color.hex,
+    "--ds-page-logo-height": designTokens.component.pageLogo.height,
+    "--ds-page-logo-width": designTokens.component.pageLogo.width,
     "--image-board-theme-color": currentState.color.hex,
     "--image-board-theme-text-color": themeTextColor,
   };
@@ -109,7 +115,7 @@ export function ImageBoardPage({
     >
       <section className="ds-mobile-app-frame image-board-shell">
         <header className="image-board-header">
-          <Logo
+          <PageLogo
             as="button"
             aria-label="Choose current color again"
             className="image-board-logo"
@@ -175,6 +181,9 @@ export function ImageBoardPage({
 }
 
 type ImageBoardPageStyle = CSSProperties & {
+  "--ds-mobile-app-page-background": string;
+  "--ds-page-logo-height": string;
+  "--ds-page-logo-width": string;
   "--image-board-theme-color": string;
   "--image-board-theme-text-color": string;
 };
