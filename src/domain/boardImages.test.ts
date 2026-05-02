@@ -9,9 +9,9 @@ import {
 } from "./boardImages";
 
 describe("boardImages", () => {
-  it("이미지 파일 크기는 3MB까지 허용한다", () => {
-    expect(MAX_BOARD_IMAGE_FILE_SIZE_BYTES).toBe(3_000_000);
-    expect(MAX_BOARD_IMAGE_FILE_SIZE_LABEL).toBe("3MB");
+  it("이미지 파일 크기는 10MB까지 허용한다", () => {
+    expect(MAX_BOARD_IMAGE_FILE_SIZE_BYTES).toBe(10_000_000);
+    expect(MAX_BOARD_IMAGE_FILE_SIZE_LABEL).toBe("10MB");
   });
 
   it("PNG JPEG WebP HEIF HEIC 파일만 보드 입력으로 허용한다", () => {
@@ -56,7 +56,7 @@ describe("boardImages", () => {
     expect(image.dataUrl).toMatch(/^data:image\/png;base64,/);
   });
 
-  it("3MB 파일은 data URL로 변환해도 저장 가능한 이미지 상태를 만든다", async () => {
+  it("10MB 파일은 data URL로 변환해도 저장 가능한 이미지 상태를 만든다", async () => {
     const image = await createBoardImageFromFile(
       new File([new Uint8Array(MAX_BOARD_IMAGE_FILE_SIZE_BYTES)], "max.png", {
         type: "image/png",

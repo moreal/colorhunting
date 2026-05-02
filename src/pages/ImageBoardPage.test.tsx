@@ -227,7 +227,7 @@ describe("ImageBoardPage", () => {
 
     expect(createImageFromFile).toHaveBeenCalledWith(file, 0);
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "이미지 파일이 너무 커요. 3MB 이하의 이미지를 선택해주세요.",
+      "이미지 파일이 너무 커요. 10MB 이하의 이미지를 선택해주세요.",
     );
     expect(saveBoardState).not.toHaveBeenCalled();
     expect(
