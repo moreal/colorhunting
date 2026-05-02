@@ -7,7 +7,6 @@ import {
   createBoardImageFromFile,
   isAcceptedBoardImageFile,
 } from "./boardImages";
-import { MAX_IMAGE_DATA_URL_LENGTH } from "./appState";
 
 describe("boardImages", () => {
   it("이미지 파일 크기는 3MB까지 허용한다", () => {
@@ -68,7 +67,6 @@ describe("boardImages", () => {
     );
 
     expect(image.dataUrl).toMatch(/^data:image\/png;base64,/);
-    expect(image.dataUrl.length).toBeLessThanOrEqual(MAX_IMAGE_DATA_URL_LENGTH);
   });
 
   it("HEIF 계열 파일은 브라우저 MIME이 비어 있어도 확장자로 저장 가능한 이미지 상태를 만든다", async () => {

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   BOARD_SLOT_COUNT,
-  MAX_IMAGE_DATA_URL_LENGTH,
   addImage,
   createColor,
   createEmptyBoard,
@@ -76,14 +75,17 @@ describe("appState", () => {
     expect(createImage({ ...testImage, name: "" })).toBeNull();
     expect(createImage({ ...testImage, mimeType: "text/plain" })).toBeNull();
     expect(createImage({ ...testImage, dataUrl: "https://example.com/sample.png" })).toBeNull();
-    expect(
-      createImage({
-        ...testImage,
-        dataUrl: `data:image/png;base64,${"a".repeat(MAX_IMAGE_DATA_URL_LENGTH)}`,
-      }),
-    ).toBeNull();
     expect(createImage({ ...testImage, altText: "" })).toBeNull();
     expect(createImage({ ...testImage, altText: 1 })).toBeNull();
+  });
+
+  it("긴 data URL도 이미지 계약을 만족하면 저장 가능한 이미지 형식으로 받아들인다", () => {
+    const imageWithLongDataUrl = {
+      ...testImage,
+      dataUrl: `data:image/png;base64,${"a".repeat(4_000_100)}`,
+    };
+
+    expect(createImage(imageWithLongDataUrl)).toEqual(imageWithLongDataUrl);
   });
 
   it("색상을 초기화하면 이미지 보드가 없는 시작 상태로 돌아간다", () => {
