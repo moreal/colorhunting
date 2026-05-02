@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
+  type TouchEvent as ReactTouchEvent,
 } from "react";
 import { BOARD_SLOT_COUNT, moveBoardSlot, type BoardSlot, type Image } from "../domain/appState";
 
@@ -46,12 +47,14 @@ type Rect = {
   width: number;
 };
 
+type DragInput = "pointer" | "touch";
 type DragPhase = "dragging" | "returning" | "settling";
 
 type DragState = {
   dropIndex: number | null;
   image: Image;
   imageId: string;
+  input: DragInput;
   isOverRemoveTarget: boolean;
   originIndex: number;
   phase: DragPhase;
@@ -62,9 +65,23 @@ type DragState = {
 };
 
 type PressCandidate = {
+  element: HTMLElement | null;
+  input: DragInput;
   pointerId: number;
   startPoint: Point;
   timerId: number;
+};
+
+type TrackedTouch = {
+  readonly clientX: number;
+  readonly clientY: number;
+  readonly identifier: number;
+};
+
+type TouchCollection = {
+  readonly length: number;
+  item?: (index: number) => TrackedTouch | null;
+  readonly [index: number]: TrackedTouch | undefined;
 };
 
 const LONG_PRESS_REORDER_DELAY_MS = 260;
@@ -179,10 +196,15 @@ export function useImageBoardReorder({
   );
 
   const moveActiveDrag = useCallback(
-    (pointerId: number, point: Point) => {
+    (input: DragInput, pointerId: number, point: Point) => {
       const state = dragStateRef.current;
 
-      if (state === null || state.pointerId !== pointerId || state.phase !== "dragging") {
+      if (
+        state === null ||
+        state.input !== input ||
+        state.pointerId !== pointerId ||
+        state.phase !== "dragging"
+      ) {
         return false;
       }
 
@@ -247,10 +269,15 @@ export function useImageBoardReorder({
   );
 
   const finishActiveDrag = useCallback(
-    (pointerId: number, point: Point) => {
+    (input: DragInput, pointerId: number, point: Point) => {
       const state = dragStateRef.current;
 
-      if (state === null || state.pointerId !== pointerId || state.phase !== "dragging") {
+      if (
+        state === null ||
+        state.input !== input ||
+        state.pointerId !== pointerId ||
+        state.phase !== "dragging"
+      ) {
         return false;
       }
 
@@ -307,10 +334,15 @@ export function useImageBoardReorder({
   );
 
   const cancelActiveDrag = useCallback(
-    (pointerId: number) => {
+    (input: DragInput, pointerId: number) => {
       const state = dragStateRef.current;
 
-      if (state === null || state.pointerId !== pointerId || state.phase !== "dragging") {
+      if (
+        state === null ||
+        state.input !== input ||
+        state.pointerId !== pointerId ||
+        state.phase !== "dragging"
+      ) {
         return false;
       }
 
@@ -321,24 +353,25 @@ export function useImageBoardReorder({
   );
 
   const beginDrag = useCallback(
-    (slotIndex: number, pointerId: number, pointer: Point) => {
+    (slotIndex: number, input: DragInput, pointerId: number, pointer: Point) => {
       const image = boardSlotsRef.current[slotIndex];
       const slotRects = getCurrentSlotRects(boardElementRef.current);
 
       if (image === null || slotRects === null) {
-        return;
+        return false;
       }
 
       const originRect = slotRects[slotIndex];
 
       if (originRect === undefined) {
-        return;
+        return false;
       }
 
       const nextDragState: DragState = {
         dropIndex: slotIndex,
         image,
         imageId: image.id,
+        input,
         isOverRemoveTarget: false,
         originIndex: slotIndex,
         phase: "dragging",
@@ -353,6 +386,7 @@ export function useImageBoardReorder({
 
       setPreviewSlots(boardSlotsRef.current);
       setNextDragState(nextDragState);
+      return true;
     },
     [setNextDragState],
   );
@@ -360,6 +394,7 @@ export function useImageBoardReorder({
   const handlePointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>, slotIndex: number) => {
       if (
+        event.pointerType === "touch" ||
         disabled ||
         !canDragImages ||
         event.button !== 0 ||
@@ -373,21 +408,29 @@ export function useImageBoardReorder({
       clearReturnTimer(returnTimerRef);
 
       const startPoint = getEventPoint(event);
+      const element = event.currentTarget;
 
-      event.preventDefault();
-      event.currentTarget.setPointerCapture?.(event.pointerId);
+      capturePointer(element, event.pointerId);
       pressCandidateRef.current = {
+        element,
+        input: "pointer",
         pointerId: event.pointerId,
         startPoint,
         timerId: window.setTimeout(() => {
           const candidate = pressCandidateRef.current;
 
-          if (candidate === null || candidate.pointerId !== event.pointerId) {
+          if (
+            candidate === null ||
+            candidate.input !== "pointer" ||
+            candidate.pointerId !== event.pointerId
+          ) {
             return;
           }
 
           pressCandidateRef.current = null;
-          beginDrag(slotIndex, event.pointerId, startPoint);
+          if (!beginDrag(slotIndex, "pointer", event.pointerId, startPoint)) {
+            releasePointerCapture(element, event.pointerId);
+          }
         }, LONG_PRESS_REORDER_DELAY_MS),
       };
     },
@@ -401,22 +444,27 @@ export function useImageBoardReorder({
 
       if (
         candidate !== null &&
+        candidate.input === "pointer" &&
         candidate.pointerId === event.pointerId &&
         getPointDistance(candidate.startPoint, point) > POINTER_MOVE_CANCEL_DISTANCE
       ) {
         clearPressCandidate(pressCandidateRef);
-        event.currentTarget.releasePointerCapture?.(event.pointerId);
         return;
       }
 
       const state = dragStateRef.current;
 
-      if (state === null || state.pointerId !== event.pointerId || state.phase !== "dragging") {
+      if (
+        state === null ||
+        state.input !== "pointer" ||
+        state.pointerId !== event.pointerId ||
+        state.phase !== "dragging"
+      ) {
         return;
       }
 
       event.preventDefault();
-      moveActiveDrag(event.pointerId, point);
+      moveActiveDrag("pointer", event.pointerId, point);
     },
     [moveActiveDrag],
   );
@@ -425,20 +473,23 @@ export function useImageBoardReorder({
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const candidate = pressCandidateRef.current;
 
-      if (candidate !== null && candidate.pointerId === event.pointerId) {
+      if (
+        candidate !== null &&
+        candidate.input === "pointer" &&
+        candidate.pointerId === event.pointerId
+      ) {
         clearPressCandidate(pressCandidateRef);
-        event.currentTarget.releasePointerCapture?.(event.pointerId);
         return;
       }
 
       const state = dragStateRef.current;
 
-      if (state === null || state.pointerId !== event.pointerId) {
+      if (state === null || state.input !== "pointer" || state.pointerId !== event.pointerId) {
         return;
       }
 
-      event.currentTarget.releasePointerCapture?.(event.pointerId);
-      finishActiveDrag(event.pointerId, getEventPoint(event));
+      releasePointerCapture(event.currentTarget, event.pointerId);
+      finishActiveDrag("pointer", event.pointerId, getEventPoint(event));
     },
     [finishActiveDrag],
   );
@@ -447,26 +498,173 @@ export function useImageBoardReorder({
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const candidate = pressCandidateRef.current;
 
-      if (candidate !== null && candidate.pointerId === event.pointerId) {
+      if (
+        candidate !== null &&
+        candidate.input === "pointer" &&
+        candidate.pointerId === event.pointerId
+      ) {
         clearPressCandidate(pressCandidateRef);
-        event.currentTarget.releasePointerCapture?.(event.pointerId);
         return;
       }
 
       const state = dragStateRef.current;
 
-      if (state === null || state.pointerId !== event.pointerId) {
+      if (state === null || state.input !== "pointer" || state.pointerId !== event.pointerId) {
         return;
       }
 
-      event.currentTarget.releasePointerCapture?.(event.pointerId);
-      cancelActiveDrag(event.pointerId);
+      releasePointerCapture(event.currentTarget, event.pointerId);
+      cancelActiveDrag("pointer", event.pointerId);
+    },
+    [cancelActiveDrag],
+  );
+
+  const handleTouchStart = useCallback(
+    (event: ReactTouchEvent<HTMLDivElement>, slotIndex: number) => {
+      const touch = getFirstTouch(event.changedTouches);
+
+      if (
+        touch === null ||
+        event.touches.length !== 1 ||
+        disabled ||
+        !canDragImages ||
+        isInteractiveElement(event.target) ||
+        boardSlotsRef.current[slotIndex] === null
+      ) {
+        return;
+      }
+
+      clearPressCandidate(pressCandidateRef);
+      clearReturnTimer(returnTimerRef);
+
+      const pointerId = touch.identifier;
+      const startPoint = getTouchPoint(touch);
+
+      pressCandidateRef.current = {
+        element: event.currentTarget,
+        input: "touch",
+        pointerId,
+        startPoint,
+        timerId: window.setTimeout(() => {
+          const candidate = pressCandidateRef.current;
+
+          if (
+            candidate === null ||
+            candidate.input !== "touch" ||
+            candidate.pointerId !== pointerId
+          ) {
+            return;
+          }
+
+          pressCandidateRef.current = null;
+          beginDrag(slotIndex, "touch", pointerId, startPoint);
+        }, LONG_PRESS_REORDER_DELAY_MS),
+      };
+    },
+    [beginDrag, canDragImages, disabled],
+  );
+
+  const handleTouchMove = useCallback(
+    (event: ReactTouchEvent<HTMLDivElement>) => {
+      const candidate = pressCandidateRef.current;
+
+      if (candidate !== null && candidate.input === "touch") {
+        const touch = getTouchByIdentifier(event.changedTouches, candidate.pointerId);
+
+        if (touch === null) {
+          return;
+        }
+
+        if (
+          event.touches.length !== 1 ||
+          getPointDistance(candidate.startPoint, getTouchPoint(touch)) >
+            POINTER_MOVE_CANCEL_DISTANCE
+        ) {
+          clearPressCandidate(pressCandidateRef);
+        }
+        return;
+      }
+
+      const state = dragStateRef.current;
+
+      if (state === null || state.input !== "touch" || state.phase !== "dragging") {
+        return;
+      }
+
+      const touch = getTouchByIdentifier(event.changedTouches, state.pointerId);
+
+      if (touch === null) {
+        return;
+      }
+
+      event.preventDefault();
+      moveActiveDrag("touch", state.pointerId, getTouchPoint(touch));
+    },
+    [moveActiveDrag],
+  );
+
+  const handleTouchEnd = useCallback(
+    (event: ReactTouchEvent<HTMLDivElement>) => {
+      const candidate = pressCandidateRef.current;
+
+      if (
+        candidate !== null &&
+        candidate.input === "touch" &&
+        getTouchByIdentifier(event.changedTouches, candidate.pointerId) !== null
+      ) {
+        clearPressCandidate(pressCandidateRef);
+        return;
+      }
+
+      const state = dragStateRef.current;
+
+      if (state === null || state.input !== "touch") {
+        return;
+      }
+
+      const touch = getTouchByIdentifier(event.changedTouches, state.pointerId);
+
+      if (touch === null) {
+        return;
+      }
+
+      event.preventDefault();
+      finishActiveDrag("touch", state.pointerId, getTouchPoint(touch));
+    },
+    [finishActiveDrag],
+  );
+
+  const handleTouchCancel = useCallback(
+    (event: ReactTouchEvent<HTMLDivElement>) => {
+      const candidate = pressCandidateRef.current;
+
+      if (
+        candidate !== null &&
+        candidate.input === "touch" &&
+        getTouchByIdentifier(event.changedTouches, candidate.pointerId) !== null
+      ) {
+        clearPressCandidate(pressCandidateRef);
+        return;
+      }
+
+      const state = dragStateRef.current;
+
+      if (state === null || state.input !== "touch") {
+        return;
+      }
+
+      if (getTouchByIdentifier(event.changedTouches, state.pointerId) === null) {
+        return;
+      }
+
+      event.preventDefault();
+      cancelActiveDrag("touch", state.pointerId);
     },
     [cancelActiveDrag],
   );
 
   useEffect(() => {
-    if (dragState?.phase !== "dragging") {
+    if (dragState?.phase !== "dragging" || dragState.input !== "pointer") {
       return;
     }
 
@@ -477,7 +675,7 @@ export function useImageBoardReorder({
         return;
       }
 
-      if (moveActiveDrag(event.pointerId, getEventPoint(event))) {
+      if (moveActiveDrag("pointer", event.pointerId, getEventPoint(event))) {
         event.preventDefault();
       }
     };
@@ -487,7 +685,7 @@ export function useImageBoardReorder({
         return;
       }
 
-      if (finishActiveDrag(event.pointerId, getEventPoint(event))) {
+      if (finishActiveDrag("pointer", event.pointerId, getEventPoint(event))) {
         event.preventDefault();
       }
     };
@@ -497,7 +695,7 @@ export function useImageBoardReorder({
         return;
       }
 
-      if (cancelActiveDrag(event.pointerId)) {
+      if (cancelActiveDrag("pointer", event.pointerId)) {
         event.preventDefault();
       }
     };
@@ -511,7 +709,73 @@ export function useImageBoardReorder({
       window.removeEventListener("pointerup", handleWindowPointerEnd);
       window.removeEventListener("pointercancel", handleWindowPointerCancel);
     };
-  }, [cancelActiveDrag, dragState?.phase, dragState?.pointerId, finishActiveDrag, moveActiveDrag]);
+  }, [
+    cancelActiveDrag,
+    dragState?.input,
+    dragState?.phase,
+    dragState?.pointerId,
+    finishActiveDrag,
+    moveActiveDrag,
+  ]);
+
+  useEffect(() => {
+    if (dragState?.phase !== "dragging" || dragState.input !== "touch") {
+      return;
+    }
+
+    const pointerId = dragState.pointerId;
+
+    const handleWindowTouchMove = (event: TouchEvent) => {
+      const touch = getTouchByIdentifier(event.changedTouches, pointerId);
+
+      if (touch === null) {
+        return;
+      }
+
+      if (moveActiveDrag("touch", pointerId, getTouchPoint(touch))) {
+        event.preventDefault();
+      }
+    };
+
+    const handleWindowTouchEnd = (event: TouchEvent) => {
+      const touch = getTouchByIdentifier(event.changedTouches, pointerId);
+
+      if (touch === null) {
+        return;
+      }
+
+      if (finishActiveDrag("touch", pointerId, getTouchPoint(touch))) {
+        event.preventDefault();
+      }
+    };
+
+    const handleWindowTouchCancel = (event: TouchEvent) => {
+      if (getTouchByIdentifier(event.changedTouches, pointerId) === null) {
+        return;
+      }
+
+      if (cancelActiveDrag("touch", pointerId)) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener("touchmove", handleWindowTouchMove, { passive: false });
+    window.addEventListener("touchend", handleWindowTouchEnd, { passive: false });
+    window.addEventListener("touchcancel", handleWindowTouchCancel, { passive: false });
+
+    return () => {
+      window.removeEventListener("touchmove", handleWindowTouchMove);
+      window.removeEventListener("touchend", handleWindowTouchEnd);
+      window.removeEventListener("touchcancel", handleWindowTouchCancel);
+    };
+  }, [
+    cancelActiveDrag,
+    dragState?.input,
+    dragState?.phase,
+    dragState?.pointerId,
+    finishActiveDrag,
+    moveActiveDrag,
+  ]);
 
   const moveImageWithKeyboard = useCallback(
     (fromIndex: number, toIndex: number) => {
@@ -555,6 +819,10 @@ export function useImageBoardReorder({
     handlePointerDown,
     handlePointerEnd,
     handlePointerMove,
+    handleTouchCancel,
+    handleTouchEnd,
+    handleTouchMove,
+    handleTouchStart,
     moveImageWithKeyboard,
     renderedSlots,
     reorderTransition,
@@ -641,6 +909,13 @@ function getEventPoint(event: { clientX: number; clientY: number }): Point {
   };
 }
 
+function getTouchPoint(touch: TrackedTouch): Point {
+  return {
+    x: touch.clientX,
+    y: touch.clientY,
+  };
+}
+
 function getPointDistance(first: Point, second: Point): number {
   return Math.hypot(first.x - second.x, first.y - second.y);
 }
@@ -717,11 +992,16 @@ function createRect(rect: DOMRect): Rect {
 }
 
 function clearPressCandidate(candidateRef: { current: PressCandidate | null }) {
-  if (candidateRef.current === null) {
+  const candidate = candidateRef.current;
+
+  if (candidate === null) {
     return;
   }
 
-  window.clearTimeout(candidateRef.current.timerId);
+  window.clearTimeout(candidate.timerId);
+  if (candidate.input === "pointer" && candidate.element !== null) {
+    releasePointerCapture(candidate.element, candidate.pointerId);
+  }
   candidateRef.current = null;
 }
 
@@ -732,6 +1012,38 @@ function clearReturnTimer(timerRef: { current: number | null }) {
 
   window.clearTimeout(timerRef.current);
   timerRef.current = null;
+}
+
+function getFirstTouch(touches: TouchCollection): TrackedTouch | null {
+  return touches.item?.(0) ?? touches[0] ?? null;
+}
+
+function getTouchByIdentifier(touches: TouchCollection, identifier: number): TrackedTouch | null {
+  for (let index = 0; index < touches.length; index += 1) {
+    const touch = touches.item?.(index) ?? touches[index];
+
+    if (touch !== undefined && touch.identifier === identifier) {
+      return touch;
+    }
+  }
+
+  return null;
+}
+
+function capturePointer(element: HTMLElement, pointerId: number) {
+  try {
+    element.setPointerCapture?.(pointerId);
+  } catch {
+    // Pointer capture can fail if the browser has already ended the pointer stream.
+  }
+}
+
+function releasePointerCapture(element: HTMLElement, pointerId: number) {
+  try {
+    element.releasePointerCapture?.(pointerId);
+  } catch {
+    // Ignore stale pointer ids; cleanup should not alter the gesture outcome.
+  }
 }
 
 function isInteractiveElement(target: EventTarget): boolean {

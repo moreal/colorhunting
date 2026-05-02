@@ -49,6 +49,10 @@ export function ImageBoard({
     handlePointerDown,
     handlePointerEnd,
     handlePointerMove,
+    handleTouchCancel,
+    handleTouchEnd,
+    handleTouchMove,
+    handleTouchStart,
     moveImageWithKeyboard,
     renderedSlots,
     reorderTransition,
@@ -92,6 +96,10 @@ export function ImageBoard({
             onPointerDown={(event) => handlePointerDown(event, slotIndex)}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerEnd}
+            onTouchCancel={handleTouchCancel}
+            onTouchEnd={handleTouchEnd}
+            onTouchMove={handleTouchMove}
+            onTouchStart={(event) => handleTouchStart(event, slotIndex)}
             transition={reorderTransition}
           >
             {image === null || !canReorder ? null : (

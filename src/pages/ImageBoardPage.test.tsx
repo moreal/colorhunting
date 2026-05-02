@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   createColor,
@@ -122,6 +122,43 @@ describe("ImageBoardPage", () => {
     await user.click(screen.getByRole("button", { name: "DOWNLOAD" }));
 
     expect(exportBoardImage).not.toHaveBeenCalled();
+  });
+
+  it("이미지 슬롯 위의 짧은 터치 이동은 페이지 스크롤 기본 동작을 유지한다", () => {
+    render(
+      <ImageBoardPage
+        state={createBoardState({
+          images: createBoard([[0, createSampleImage(1)]]),
+        })}
+      />,
+    );
+    const slotFrames = getImageBoardSlotFrames();
+
+    expect(
+      getCssRuleStyle('.ds-image-board-reorder-slot[data-draggable="true"]').getPropertyValue(
+        "touch-action",
+      ),
+    ).toBe("auto");
+    expect(
+      fireEvent.pointerDown(slotFrames[0], {
+        button: 0,
+        clientX: 50,
+        clientY: 50,
+        pointerId: 1,
+        pointerType: "touch",
+      }),
+    ).toBe(true);
+    expect(
+      fireEvent.pointerMove(slotFrames[0], {
+        clientX: 50,
+        clientY: 90,
+        pointerId: 1,
+        pointerType: "touch",
+      }),
+    ).toBe(true);
+    expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
+      "data-reordering",
+    );
   });
 
   it("가득 채운 보드는 모든 슬롯을 채운 상태로 읽힌다", () => {

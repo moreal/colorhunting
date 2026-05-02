@@ -591,7 +591,7 @@ button.ds-logo {
 
 .ds-image-board-reorder-slot[data-draggable="true"] {
   cursor: grab;
-  touch-action: none;
+  touch-action: auto;
 }
 
 .ds-image-board-reorder-slot[data-drag-state] {

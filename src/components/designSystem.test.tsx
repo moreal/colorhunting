@@ -6,11 +6,13 @@ import { moveBoardSlot, type BoardSlot, type Image } from "../domain/appState";
 import { designTokens } from "../designSystem/tokens";
 import {
   beginLongPressSlotDrag,
+  beginLongPressSlotTouchDrag,
   beginLongPressSlotDragWithRealTimer,
   cancelSlotDrag,
   dropSlotDragAt,
   dropSlotDragAtPoint,
   dropSlotDragOutside,
+  dropWindowSlotTouchDragAtPoint,
   dropWindowSlotDragAtPoint,
   getImageBoardSlotFrames,
   getImageBoardSlotGroups,
@@ -20,6 +22,7 @@ import {
   moveSlotDragOutside,
   moveSlotDragToPoint,
   moveSlotDragTo,
+  moveWindowSlotTouchDragToPoint,
   moveWindowSlotDragToPoint,
   startSlotPress,
   waitForSlotDragSettle,
@@ -421,6 +424,27 @@ describe("design system components", () => {
     expect(screen.getByRole("group", { name: /Image board/ })).not.toHaveAttribute(
       "data-reordering",
     );
+  });
+
+  it("이미지 보드는 터치에서 길게 누른 뒤 슬롯을 옮기도록 요청한다", async () => {
+    vi.useFakeTimers();
+    const onReorderImages = vi.fn<(fromIndex: number, toIndex: number) => boolean>(() => true);
+    render(
+      <ImageBoard
+        images={[createSampleImage(1), createSampleImage(2), createSampleImage(3)]}
+        onReorderImages={onReorderImages}
+      />,
+    );
+    const slotFrames = getImageBoardSlotFrames();
+    mockImageBoardSlotRects(slotFrames);
+
+    beginLongPressSlotTouchDrag(slotFrames, 0);
+    moveWindowSlotTouchDragToPoint({ x: 250, y: 50 });
+    dropWindowSlotTouchDragAtPoint({ x: 250, y: 50 });
+    await act(async () => {});
+
+    expect(onReorderImages).toHaveBeenCalledWith(0, 2);
+    vi.useRealTimers();
   });
 
   it("이미지 보드는 보드 슬롯 밖에서 드래그를 끝내면 재배치를 요청하지 않고 원래 순서로 복구한다", () => {

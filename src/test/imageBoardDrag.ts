@@ -56,6 +56,13 @@ export function beginLongPressSlotDrag(slotFrames: readonly HTMLElement[], fromI
   });
 }
 
+export function beginLongPressSlotTouchDrag(slotFrames: readonly HTMLElement[], fromIndex: number) {
+  startSlotTouchPress(slotFrames, fromIndex);
+  act(() => {
+    vi.advanceTimersByTime(300);
+  });
+}
+
 export async function beginLongPressSlotDragWithRealTimer(
   slotFrames: readonly HTMLElement[],
   fromIndex: number,
@@ -105,6 +112,33 @@ export function movePressedSlotBy(
   });
 }
 
+export function startSlotTouchPress(slotFrames: readonly HTMLElement[], fromIndex: number) {
+  const touch = createTouch(getSlotCenterPoint(fromIndex));
+
+  fireEvent.touchStart(slotFrames[fromIndex], {
+    changedTouches: [touch],
+    touches: [touch],
+  });
+}
+
+export function movePressedSlotTouchBy(
+  slotFrames: readonly HTMLElement[],
+  fromIndex: number,
+  deltaX: number,
+  deltaY: number,
+) {
+  const point = getSlotCenterPoint(fromIndex);
+  const touch = createTouch({
+    x: point.x + deltaX,
+    y: point.y + deltaY,
+  });
+
+  fireEvent.touchMove(slotFrames[fromIndex], {
+    changedTouches: [touch],
+    touches: [touch],
+  });
+}
+
 export function moveSlotDragTo(
   slotFrames: readonly HTMLElement[],
   fromIndex: number,
@@ -147,6 +181,15 @@ export function moveWindowSlotDragToPoint(point: { x: number; y: number }) {
   });
 }
 
+export function moveWindowSlotTouchDragToPoint(point: { x: number; y: number }) {
+  const touch = createTouch(point);
+
+  fireEvent.touchMove(window, {
+    changedTouches: [touch],
+    touches: [touch],
+  });
+}
+
 export function dropSlotDragAt(
   slotFrames: readonly HTMLElement[],
   fromIndex: number,
@@ -181,6 +224,15 @@ export function dropWindowSlotDragAtPoint(point: { x: number; y: number }) {
   });
 }
 
+export function dropWindowSlotTouchDragAtPoint(point: { x: number; y: number }) {
+  const touch = createTouch(point);
+
+  fireEvent.touchEnd(window, {
+    changedTouches: [touch],
+    touches: [],
+  });
+}
+
 export function dropSlotDragOutside(slotFrames: readonly HTMLElement[], fromIndex: number) {
   fireEvent.pointerUp(slotFrames[fromIndex], {
     clientX: 360,
@@ -203,6 +255,14 @@ function getSlotCenterPoint(slotIndex: number) {
     x: column * 100 + 50,
     y: row * 100 + 50,
   };
+}
+
+function createTouch(point: { x: number; y: number }): Touch {
+  return {
+    clientX: point.x,
+    clientY: point.y,
+    identifier: 1,
+  } as Touch;
 }
 
 function createDomRect(left: number, top: number, width: number, height: number): DOMRect {
