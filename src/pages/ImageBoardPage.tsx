@@ -20,6 +20,7 @@ import {
   type SaveBoardState,
   type TriggerBoardDownload,
 } from "../hooks/useImageBoardController";
+import { triggerBoardDownload } from "./boardDownload";
 import { ColorHuntingInfoPopup } from "./ColorHuntingInfoPopup";
 import "../designSystem/styles.css";
 import "./ImageBoardPage.css";
@@ -193,21 +194,6 @@ async function defaultExportBoardImage(
   _descriptor: BoardExportDescriptor,
 ): Promise<Blob> {
   return await composeBoardImage(images);
-}
-
-function triggerBoardDownload(blob: Blob, fileName: string) {
-  const objectUrl = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.download = fileName;
-  link.href = objectUrl;
-  link.rel = "noopener";
-  link.style.display = "none";
-  document.body.append(link);
-  link.click();
-  link.remove();
-
-  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
 }
 
 async function noopSaveBoardState() {}

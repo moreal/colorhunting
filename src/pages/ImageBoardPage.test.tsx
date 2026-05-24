@@ -506,6 +506,34 @@ describe("ImageBoardPage", () => {
     expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeEnabled();
   });
 
+  it("다운로드 트리거가 실패하면 완료 상태를 보여주지 않고 오류를 보여준다", async () => {
+    const user = userEvent.setup();
+    const blob = new Blob(["board"], { type: "image/png" });
+    const exportBoardImage = vi.fn<ExportBoardImage>(async () => blob);
+    const triggerDownload = vi.fn<TriggerBoardDownload>(async () => {
+      throw new Error("download failed");
+    });
+    render(
+      <ImageBoardPage
+        exportBoardImage={exportBoardImage}
+        state={createBoardState({ images: createFilledBoard() })}
+        triggerDownload={triggerDownload}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "DOWNLOAD" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "보드 이미지를 만들지 못했어요. 다시 시도해주세요.",
+    );
+    expect(triggerDownload).toHaveBeenCalledWith(
+      blob,
+      expect.stringMatching(/^colorhunting-red-\d{4}-\d{2}-\d{2}\.png$/),
+    );
+    expect(screen.queryByText("다운로드 완료했어요!")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeEnabled();
+  });
+
   it("색상명은 노란색만 검정 텍스트를 사용한다", () => {
     const { rerender } = render(<ImageBoardPage state={createBoardState()} />);
 

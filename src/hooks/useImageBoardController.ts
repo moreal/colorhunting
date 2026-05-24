@@ -33,7 +33,7 @@ export type ExportBoardImage = (
   images: readonly BoardSlot[],
   descriptor: BoardExportDescriptor,
 ) => Promise<Blob>;
-export type TriggerBoardDownload = (blob: Blob, fileName: string) => void;
+export type TriggerBoardDownload = (blob: Blob, fileName: string) => Promise<void> | void;
 
 export type ImageBoardControllerOptions = {
   createImageFromFile: CreateImageFromFile;
@@ -224,7 +224,7 @@ export function useImageBoardController({
         colorLabel,
       });
 
-      triggerDownload(blob, createBoardDownloadFileName(colorLabel));
+      await triggerDownload(blob, createBoardDownloadFileName(colorLabel));
       dispatch({ type: "downloadCompleted" });
     } catch {
       dispatch({ error: DOWNLOAD_ERROR, type: "downloadFailed" });
