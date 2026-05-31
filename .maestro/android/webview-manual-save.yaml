@@ -1,0 +1,16 @@
+appId: ${ANDROID_BROWSER_PACKAGE}
+name: Colorhunting Android WebView manual save fallback
+tags:
+  - android
+  - webview
+  - e2e
+---
+- launchApp:
+    clearState: false
+- openLink: ${APP_URL}
+- assertVisible: "RED"
+- assertVisible: "DOWNLOAD"
+- tapOn: "DOWNLOAD"
+- assertVisible: "보드 이미지 저장"
+- assertVisible: "이미지를 길게 눌러 저장하세요."
+- assertVisible: "이미지 열기"

@@ -41,3 +41,7 @@ run = "yarn format"
 [tasks.format-check]
 description = "Check source formatting with oxfmt"
 run = "yarn format:check"
+
+[tasks.e2e-android-webview]
+description = "Run Android WebView manual-save fallback E2E through adb and Maestro"
+run = "bash scripts/e2e-android-webview.sh"

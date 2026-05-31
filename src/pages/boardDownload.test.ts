@@ -14,6 +14,7 @@ const ORIGINAL_NAVIGATOR_DESCRIPTORS = {
   share: Object.getOwnPropertyDescriptor(navigator, "share"),
   userAgent: Object.getOwnPropertyDescriptor(navigator, "userAgent"),
 };
+const ORIGINAL_LOCATION_HREF = window.location.href;
 const ORIGINAL_URL_DESCRIPTORS = {
   createObjectURL: Object.getOwnPropertyDescriptor(URL, "createObjectURL"),
   revokeObjectURL: Object.getOwnPropertyDescriptor(URL, "revokeObjectURL"),
@@ -26,6 +27,7 @@ describe("boardDownload", () => {
     restoreProperty(navigator, "canShare", ORIGINAL_NAVIGATOR_DESCRIPTORS.canShare);
     restoreProperty(navigator, "share", ORIGINAL_NAVIGATOR_DESCRIPTORS.share);
     restoreProperty(navigator, "userAgent", ORIGINAL_NAVIGATOR_DESCRIPTORS.userAgent);
+    window.history.replaceState(null, "", ORIGINAL_LOCATION_HREF);
     restoreProperty(URL, "createObjectURL", ORIGINAL_URL_DESCRIPTORS.createObjectURL);
     restoreProperty(URL, "revokeObjectURL", ORIGINAL_URL_DESCRIPTORS.revokeObjectURL);
   });
@@ -111,6 +113,24 @@ describe("boardDownload", () => {
     expect(result).toEqual({
       fileName,
       mimeType: "image/png",
+      objectUrl: "blob:colorhunting-board",
+      type: "manual-save",
+    });
+  });
+
+  it("e2e 수동 저장 모드에서는 브라우저 UA에서도 수동 저장용 이미지 URL을 반환한다", async () => {
+    const fileName = "colorhunting-red-2026-05-24.png";
+    const blob = new Blob(["board"], { type: "image/png" });
+    const { createObjectURL } = mockObjectUrl();
+    mockNavigatorFileShare({ canShareResult: false });
+    mockNavigatorUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X) Chrome/126 Safari/537.36");
+    window.history.replaceState(null, "", "/?e2e=1&e2eDownload=manual-save");
+
+    const result = await triggerBoardDownload(blob, fileName);
+
+    expect(createObjectURL).toHaveBeenCalledWith(blob);
+    expect(result).toMatchObject({
+      fileName,
       objectUrl: "blob:colorhunting-board",
       type: "manual-save",
     });

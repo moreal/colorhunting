@@ -23,6 +23,7 @@ mise run build
 mise run test
 mise run lint
 mise run format-check
+mise run e2e-android-webview
 ~~~~
 
 로컬 개발 서버는 Vite가 실행합니다.
@@ -38,5 +39,16 @@ mise run format
 mise run format-check
 mise run lint
 ~~~~
+
+Android WebView 수동 저장 fallback은 adb와 Maestro로 로컬 에뮬레이터에서 확인할 수 있습니다.
+Android Studio에서 에뮬레이터를 먼저 실행한 뒤 다음 명령을 사용합니다.
+
+~~~~ bash
+mise run e2e-android-webview
+~~~~
+
+이 명령은 Vite 개발 서버를 시작하거나 기존 `127.0.0.1:5173` 서버를 재사용하고,
+`adb reverse`로 에뮬레이터에서 로컬 서버에 접근하게 한 다음 Maestro flow를 실행합니다.
+기본 브라우저 패키지는 `com.android.chrome`이며 필요하면 `ANDROID_BROWSER_PACKAGE`로 바꿀 수 있습니다.
 
 [mise]: https://mise.jdx.dev/

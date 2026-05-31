@@ -21,7 +21,7 @@ export async function triggerBoardDownload(
     return { type: "completed" };
   }
 
-  if (isLikelyAndroidWebView(navigator.userAgent)) {
+  if (shouldUseManualSaveFallback(navigator.userAgent)) {
     return createManualBoardDownload(blob, fileName);
   }
 
@@ -66,6 +66,16 @@ function isLikelyAndroidWebView(userAgent: string): boolean {
   }
 
   return /\bwv\b|Version\/4\.0|KAKAOTALK|GSA\//i.test(userAgent);
+}
+
+function shouldUseManualSaveFallback(userAgent: string): boolean {
+  return isManualSaveModeForced() || isLikelyAndroidWebView(userAgent);
+}
+
+function isManualSaveModeForced(): boolean {
+  const params = new URLSearchParams(window.location.search);
+
+  return params.get("e2e") === "1" && params.get("e2eDownload") === "manual-save";
 }
 
 function createManualBoardDownload(blob: Blob, fileName: string): BoardDownloadResult {
