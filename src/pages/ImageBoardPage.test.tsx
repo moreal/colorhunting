@@ -23,10 +23,25 @@ import {
 } from "../test/imageBoardDrag";
 import { ImageBoardPage, type ExportBoardImage, type TriggerBoardDownload } from "./ImageBoardPage";
 
+const ORIGINAL_NAVIGATOR_DESCRIPTORS = {
+  canShare: Object.getOwnPropertyDescriptor(navigator, "canShare"),
+  share: Object.getOwnPropertyDescriptor(navigator, "share"),
+  userAgent: Object.getOwnPropertyDescriptor(navigator, "userAgent"),
+};
+const ORIGINAL_URL_DESCRIPTORS = {
+  createObjectURL: Object.getOwnPropertyDescriptor(URL, "createObjectURL"),
+  revokeObjectURL: Object.getOwnPropertyDescriptor(URL, "revokeObjectURL"),
+};
+
 describe("ImageBoardPage", () => {
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
+    restoreProperty(navigator, "canShare", ORIGINAL_NAVIGATOR_DESCRIPTORS.canShare);
+    restoreProperty(navigator, "share", ORIGINAL_NAVIGATOR_DESCRIPTORS.share);
+    restoreProperty(navigator, "userAgent", ORIGINAL_NAVIGATOR_DESCRIPTORS.userAgent);
+    restoreProperty(URL, "createObjectURL", ORIGINAL_URL_DESCRIPTORS.createObjectURL);
+    restoreProperty(URL, "revokeObjectURL", ORIGINAL_URL_DESCRIPTORS.revokeObjectURL);
   });
 
   it("확정된 색상 상태가 아니면 보드 페이지를 렌더링하지 않는다", () => {
@@ -534,6 +549,43 @@ describe("ImageBoardPage", () => {
     expect(screen.getByRole("button", { name: "DOWNLOAD" })).toBeEnabled();
   });
 
+  it("Android WebView에서는 저장용 이미지 다이얼로그를 열고 닫을 때 Blob URL을 해제한다", async () => {
+    const user = userEvent.setup();
+    const blob = new Blob(["board"], { type: "image/png" });
+    const exportBoardImage = vi.fn<ExportBoardImage>(async () => blob);
+    const { createObjectURL, revokeObjectURL } = mockObjectUrl();
+    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    mockNavigatorFileShare({ canShareResult: false });
+    mockNavigatorUserAgent(
+      "Mozilla/5.0 (Linux; Android 14; Pixel Build/AP1A; wv) AppleWebKit/537.36 " +
+        "(KHTML, like Gecko) Version/4.0 Chrome/126.0.0.0 Mobile Safari/537.36 GSA/15.0.0",
+    );
+    render(
+      <ImageBoardPage
+        exportBoardImage={exportBoardImage}
+        state={createBoardState({ images: createFilledBoard() })}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "DOWNLOAD" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "보드 이미지 저장" });
+    const previewImage = within(dialog).getByRole("img", { name: "저장할 보드 이미지" });
+    const openLink = within(dialog).getByRole("link", { name: "이미지 열기" });
+    expect(createObjectURL).toHaveBeenCalledWith(blob);
+    expect(anchorClick).not.toHaveBeenCalled();
+    expect(previewImage).toHaveAttribute("src", "blob:colorhunting-board");
+    expect(within(dialog).getByText("이미지를 길게 눌러 저장하세요.")).toBeInTheDocument();
+    expect(openLink).toHaveAttribute("href", "blob:colorhunting-board");
+    expect(openLink).toHaveAttribute("download", expect.stringMatching(/^colorhunting-red-/));
+    expect(await screen.findByText("이미지를 저장할 수 있어요!")).toBeVisible();
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+
+    await user.click(within(dialog).getByRole("button", { name: "저장 안내 닫기" }));
+
+    await waitFor(() => expect(revokeObjectURL).toHaveBeenCalledWith("blob:colorhunting-board"));
+  });
+
   it("색상명은 노란색만 검정 텍스트를 사용한다", () => {
     const { rerender } = render(<ImageBoardPage state={createBoardState()} />);
 
@@ -663,4 +715,56 @@ function getCssRuleStyle(selectorText: string): CSSStyleDeclaration {
   }
 
   throw new Error(`Expected CSS rule for ${selectorText}.`);
+}
+
+type BoardFileShareData = {
+  files: File[];
+  title: string;
+};
+
+function mockNavigatorFileShare(options: { canShareResult: boolean }) {
+  Object.defineProperty(navigator, "canShare", {
+    configurable: true,
+    value: vi.fn<(data: BoardFileShareData) => boolean>(() => options.canShareResult),
+  });
+  Object.defineProperty(navigator, "share", {
+    configurable: true,
+    value: vi.fn<(data: BoardFileShareData) => Promise<void>>(async () => {}),
+  });
+}
+
+function mockNavigatorUserAgent(userAgent: string) {
+  Object.defineProperty(navigator, "userAgent", {
+    configurable: true,
+    value: userAgent,
+  });
+}
+
+function mockObjectUrl() {
+  const createObjectURL = vi.fn<(blob: Blob) => string>(() => "blob:colorhunting-board");
+  const revokeObjectURL = vi.fn<(objectUrl: string) => void>();
+
+  Object.defineProperty(URL, "createObjectURL", {
+    configurable: true,
+    value: createObjectURL,
+  });
+  Object.defineProperty(URL, "revokeObjectURL", {
+    configurable: true,
+    value: revokeObjectURL,
+  });
+
+  return { createObjectURL, revokeObjectURL };
+}
+
+function restoreProperty<T extends object, K extends PropertyKey>(
+  target: T,
+  property: K,
+  descriptor: PropertyDescriptor | undefined,
+) {
+  if (descriptor === undefined) {
+    delete (target as Record<K, unknown>)[property];
+    return;
+  }
+
+  Object.defineProperty(target, property, descriptor);
 }

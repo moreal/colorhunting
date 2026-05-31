@@ -12,6 +12,7 @@ type ShareBoardFile = (data: BoardFileShareData) => Promise<void>;
 const ORIGINAL_NAVIGATOR_DESCRIPTORS = {
   canShare: Object.getOwnPropertyDescriptor(navigator, "canShare"),
   share: Object.getOwnPropertyDescriptor(navigator, "share"),
+  userAgent: Object.getOwnPropertyDescriptor(navigator, "userAgent"),
 };
 const ORIGINAL_URL_DESCRIPTORS = {
   createObjectURL: Object.getOwnPropertyDescriptor(URL, "createObjectURL"),
@@ -24,6 +25,7 @@ describe("boardDownload", () => {
     vi.useRealTimers();
     restoreProperty(navigator, "canShare", ORIGINAL_NAVIGATOR_DESCRIPTORS.canShare);
     restoreProperty(navigator, "share", ORIGINAL_NAVIGATOR_DESCRIPTORS.share);
+    restoreProperty(navigator, "userAgent", ORIGINAL_NAVIGATOR_DESCRIPTORS.userAgent);
     restoreProperty(URL, "createObjectURL", ORIGINAL_URL_DESCRIPTORS.createObjectURL);
     restoreProperty(URL, "revokeObjectURL", ORIGINAL_URL_DESCRIPTORS.revokeObjectURL);
   });
@@ -34,8 +36,9 @@ describe("boardDownload", () => {
     const { canShare, share } = mockNavigatorFileShare({ canShareResult: true });
     const { createObjectURL } = mockObjectUrl();
 
-    await triggerBoardDownload(blob, fileName);
+    const result = await triggerBoardDownload(blob, fileName);
 
+    expect(result).toEqual({ type: "completed" });
     expect(canShare).toHaveBeenCalledOnce();
     expect(share).toHaveBeenCalledOnce();
     expect(createObjectURL).not.toHaveBeenCalled();
@@ -67,8 +70,9 @@ describe("boardDownload", () => {
       },
     );
 
-    await triggerBoardDownload(blob, fileName);
+    const result = await triggerBoardDownload(blob, fileName);
 
+    expect(result).toEqual({ type: "completed" });
     expect(canShare).toHaveBeenCalledOnce();
     expect(share).not.toHaveBeenCalled();
     expect(createObjectURL).toHaveBeenCalledWith(blob);
@@ -84,6 +88,32 @@ describe("boardDownload", () => {
     vi.runOnlyPendingTimers();
 
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:colorhunting-board");
+  });
+
+  it("Android WebView에서는 anchor 다운로드 대신 수동 저장용 이미지 URL을 반환한다", async () => {
+    const fileName = "colorhunting-red-2026-05-24.png";
+    const blob = new Blob(["board"], { type: "image/png" });
+    const { canShare, share } = mockNavigatorFileShare({ canShareResult: false });
+    const { createObjectURL, revokeObjectURL } = mockObjectUrl();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    mockNavigatorUserAgent(
+      "Mozilla/5.0 (Linux; Android 14; Pixel Build/AP1A; wv) AppleWebKit/537.36 " +
+        "(KHTML, like Gecko) Version/4.0 Chrome/126.0.0.0 Mobile Safari/537.36 KAKAOTALK",
+    );
+
+    const result = await triggerBoardDownload(blob, fileName);
+
+    expect(canShare).toHaveBeenCalledOnce();
+    expect(share).not.toHaveBeenCalled();
+    expect(click).not.toHaveBeenCalled();
+    expect(createObjectURL).toHaveBeenCalledWith(blob);
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      fileName,
+      mimeType: "image/png",
+      objectUrl: "blob:colorhunting-board",
+      type: "manual-save",
+    });
   });
 });
 
@@ -117,6 +147,13 @@ function mockObjectUrl() {
   });
 
   return { createObjectURL, revokeObjectURL };
+}
+
+function mockNavigatorUserAgent(userAgent: string) {
+  Object.defineProperty(navigator, "userAgent", {
+    configurable: true,
+    value: userAgent,
+  });
 }
 
 function restoreProperty<T extends object, K extends PropertyKey>(

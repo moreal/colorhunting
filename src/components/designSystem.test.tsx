@@ -190,6 +190,13 @@ describe("design system components", () => {
     expect(screen.getByText("다운로드 완료했어요!")).toBeVisible();
   });
 
+  it("다운로드 바텀시트는 수동 저장 준비 상태 메시지를 보여준다", () => {
+    render(<DownloadBottomSheet state="MANUAL_SAVE_READY" />);
+
+    expect(screen.getByRole("button", { name: "DOWNLOAD" })).not.toBeDisabled();
+    expect(screen.getByText("이미지를 저장할 수 있어요!")).toBeVisible();
+  });
+
   it("다운로드 바텀시트는 삭제 모드에서 드롭 안내와 활성 상태를 보여준다", () => {
     const { rerender } = render(<DownloadBottomSheet mode="remove" state="ENOUGH_IMAGES" />);
 

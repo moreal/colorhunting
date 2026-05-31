@@ -3,7 +3,11 @@ import { classNames } from "./classNames";
 import { DownloadButton, type DownloadButtonProps } from "./DownloadButton";
 import { RemoveButtonIcon } from "./RemoveButton";
 
-export type DownloadBottomSheetState = "DOWNLOAD_COMPLETED" | "ENOUGH_IMAGES" | "NON_ENOUGH_IMAGES";
+export type DownloadBottomSheetState =
+  | "DOWNLOAD_COMPLETED"
+  | "ENOUGH_IMAGES"
+  | "MANUAL_SAVE_READY"
+  | "NON_ENOUGH_IMAGES";
 export type DownloadBottomSheetMode = "download" | "remove";
 
 export type DownloadBottomSheetProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
@@ -28,6 +32,10 @@ const DOWNLOAD_BOTTOM_SHEET_CONFIG: Record<
   ENOUGH_IMAGES: {
     disabled: false,
     message: null,
+  },
+  MANUAL_SAVE_READY: {
+    disabled: false,
+    message: "이미지를 저장할 수 있어요!",
   },
   NON_ENOUGH_IMAGES: {
     disabled: true,

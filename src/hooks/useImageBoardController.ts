@@ -20,7 +20,10 @@ import {
   getColorLabel,
   getImageBoardDownloadState,
   hasEnoughBoardImages,
+  isManualBoardDownloadResult,
+  type BoardDownloadResult,
   type BoardDownloadStatus,
+  type ManualBoardDownload,
 } from "../domain/imageBoard";
 
 export type CreateImageFromFile = (file: File, slotIndex: number) => Promise<Image>;
@@ -33,7 +36,10 @@ export type ExportBoardImage = (
   images: readonly BoardSlot[],
   descriptor: BoardExportDescriptor,
 ) => Promise<Blob>;
-export type TriggerBoardDownload = (blob: Blob, fileName: string) => Promise<void> | void;
+export type TriggerBoardDownload = (
+  blob: Blob,
+  fileName: string,
+) => BoardDownloadResult | Promise<BoardDownloadResult | void> | void;
 
 export type ImageBoardControllerOptions = {
   createImageFromFile: CreateImageFromFile;
@@ -47,6 +53,7 @@ export type ImageBoardControllerOptions = {
 type ImageBoardInteractionState = {
   boardError: string | null;
   downloadStatus: BoardDownloadStatus;
+  manualDownload: ManualBoardDownload | null;
   isInfoOpen: boolean;
   isSavingBoard: boolean;
 };
@@ -55,6 +62,8 @@ type ImageBoardAction =
   | { type: "boardStateChanged" }
   | { type: "downloadCompleted" }
   | { type: "downloadFailed"; error: string }
+  | { manualDownload: ManualBoardDownload; type: "downloadManualSaveReady" }
+  | { type: "downloadManualSaveClosed" }
   | { type: "downloadStarted" }
   | { type: "infoClosed" }
   | { type: "infoOpened" }
@@ -72,6 +81,7 @@ const DOWNLOAD_ERROR = "보드 이미지를 만들지 못했어요. 다시 시�
 const INITIAL_IMAGE_BOARD_INTERACTION_STATE: ImageBoardInteractionState = {
   boardError: null,
   downloadStatus: "idle",
+  manualDownload: null,
   isInfoOpen: false,
   isSavingBoard: false,
 };
@@ -93,6 +103,16 @@ export function useImageBoardController({
   useEffect(() => {
     dispatch({ type: "boardStateChanged" });
   }, [state]);
+
+  useEffect(() => {
+    const manualDownload = interactionState.manualDownload;
+
+    return () => {
+      if (manualDownload !== null) {
+        URL.revokeObjectURL(manualDownload.objectUrl);
+      }
+    };
+  }, [interactionState.manualDownload]);
 
   const colorLabel = useMemo(
     () => getColorLabel(currentState?.color.hex),
@@ -127,6 +147,10 @@ export function useImageBoardController({
 
   const closeInfo = useCallback(() => {
     dispatch({ type: "infoClosed" });
+  }, []);
+
+  const closeManualDownload = useCallback(() => {
+    dispatch({ type: "downloadManualSaveClosed" });
   }, []);
 
   const selectImage = useCallback(
@@ -223,8 +247,13 @@ export function useImageBoardController({
         color: currentState.color.hex,
         colorLabel,
       });
+      const downloadResult = await triggerDownload(blob, createBoardDownloadFileName(colorLabel));
 
-      await triggerDownload(blob, createBoardDownloadFileName(colorLabel));
+      if (isManualBoardDownloadResult(downloadResult)) {
+        dispatch({ manualDownload: downloadResult, type: "downloadManualSaveReady" });
+        return;
+      }
+
       dispatch({ type: "downloadCompleted" });
     } catch {
       dispatch({ error: DOWNLOAD_ERROR, type: "downloadFailed" });
@@ -237,11 +266,13 @@ export function useImageBoardController({
     colorLabel,
     currentState,
     downloadBoard,
+    closeManualDownload,
     downloadSheetState,
     downloadStatus: interactionState.downloadStatus,
     isBoardBusy,
     isInfoOpen: interactionState.isInfoOpen,
     isSavingBoard: interactionState.isSavingBoard,
+    manualDownload: interactionState.manualDownload,
     openInfo,
     reorderImages,
     removeSelectedImage,
@@ -260,24 +291,40 @@ function imageBoardInteractionReducer(
         ...state,
         boardError: null,
         downloadStatus: "idle",
+        manualDownload: null,
       };
     case "downloadCompleted":
       return {
         ...state,
         boardError: null,
         downloadStatus: "completed",
+        manualDownload: null,
       };
     case "downloadFailed":
       return {
         ...state,
         boardError: action.error,
         downloadStatus: "idle",
+        manualDownload: null,
+      };
+    case "downloadManualSaveClosed":
+      return {
+        ...state,
+        manualDownload: null,
+      };
+    case "downloadManualSaveReady":
+      return {
+        ...state,
+        boardError: null,
+        downloadStatus: "manualSaveReady",
+        manualDownload: action.manualDownload,
       };
     case "downloadStarted":
       return {
         ...state,
         boardError: null,
         downloadStatus: "loading",
+        manualDownload: null,
       };
     case "infoClosed":
       return {
@@ -307,6 +354,7 @@ function imageBoardInteractionReducer(
         boardError: null,
         downloadStatus: "idle",
         isSavingBoard: false,
+        manualDownload: null,
       };
   }
 }

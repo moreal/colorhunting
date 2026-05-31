@@ -44,6 +44,7 @@ describe("imageBoard", () => {
     expect(countFilledBoardImages(board)).toBe(9);
     expect(hasEnoughBoardImages(9)).toBe(true);
     expect(getImageBoardDownloadState(9, "idle")).toBe("ENOUGH_IMAGES");
+    expect(getImageBoardDownloadState(9, "manualSaveReady")).toBe("MANUAL_SAVE_READY");
     expect(getImageBoardDownloadState(9, "completed")).toBe("DOWNLOAD_COMPLETED");
   });
 

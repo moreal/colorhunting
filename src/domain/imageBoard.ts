@@ -7,8 +7,22 @@ import {
 import { normalizeHexColor } from "./color";
 import { COLOR_HUNTING_COLOR_HEX } from "./colorHuntingTheme";
 
-export type BoardDownloadStatus = "completed" | "idle" | "loading";
-export type ImageBoardDownloadState = "DOWNLOAD_COMPLETED" | "ENOUGH_IMAGES" | "NON_ENOUGH_IMAGES";
+export type BoardDownloadStatus = "completed" | "idle" | "loading" | "manualSaveReady";
+export type ImageBoardDownloadState =
+  | "DOWNLOAD_COMPLETED"
+  | "ENOUGH_IMAGES"
+  | "MANUAL_SAVE_READY"
+  | "NON_ENOUGH_IMAGES";
+export type ManualBoardDownload = {
+  fileName: string;
+  mimeType: string;
+  objectUrl: string;
+  type: "manual-save";
+};
+export type CompletedBoardDownload = {
+  type: "completed";
+};
+export type BoardDownloadResult = CompletedBoardDownload | ManualBoardDownload;
 
 const COLOR_LABELS_BY_HEX = createColorLabelsByHex(COLOR_HUNTING_COLOR_HEX);
 
@@ -32,11 +46,21 @@ export function getImageBoardDownloadState(
     return "NON_ENOUGH_IMAGES";
   }
 
+  if (downloadStatus === "manualSaveReady") {
+    return "MANUAL_SAVE_READY";
+  }
+
   if (downloadStatus === "completed") {
     return "DOWNLOAD_COMPLETED";
   }
 
   return "ENOUGH_IMAGES";
+}
+
+export function isManualBoardDownloadResult(
+  result: BoardDownloadResult | null | undefined | void,
+): result is ManualBoardDownload {
+  return result?.type === "manual-save";
 }
 
 export function getColorLabel(hex: string | undefined): string {

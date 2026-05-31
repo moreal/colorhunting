@@ -1,3 +1,5 @@
+import type { BoardDownloadResult } from "../domain/imageBoard";
+
 type BoardFileShareData = {
   files: File[];
   title: string;
@@ -8,15 +10,23 @@ type BoardFileShareNavigator = Navigator & {
   share?: (data: BoardFileShareData) => Promise<void>;
 };
 
-export async function triggerBoardDownload(blob: Blob, fileName: string): Promise<void> {
+export async function triggerBoardDownload(
+  blob: Blob,
+  fileName: string,
+): Promise<BoardDownloadResult> {
   const shareData = createBoardFileShareData(blob, fileName);
 
   if (shareData !== null && canShareBoardFile(shareData)) {
     await shareBoardFile(shareData);
-    return;
+    return { type: "completed" };
+  }
+
+  if (isLikelyAndroidWebView(navigator.userAgent)) {
+    return createManualBoardDownload(blob, fileName);
   }
 
   triggerAnchorDownload(blob, fileName);
+  return { type: "completed" };
 }
 
 function createBoardFileShareData(blob: Blob, fileName: string): BoardFileShareData | null {
@@ -48,6 +58,23 @@ async function shareBoardFile(shareData: BoardFileShareData): Promise<void> {
   const shareNavigator = navigator as BoardFileShareNavigator;
 
   await shareNavigator.share?.(shareData);
+}
+
+function isLikelyAndroidWebView(userAgent: string): boolean {
+  if (!/Android/i.test(userAgent)) {
+    return false;
+  }
+
+  return /\bwv\b|Version\/4\.0|KAKAOTALK|GSA\//i.test(userAgent);
+}
+
+function createManualBoardDownload(blob: Blob, fileName: string): BoardDownloadResult {
+  return {
+    fileName,
+    mimeType: blob.type || "image/png",
+    objectUrl: URL.createObjectURL(blob),
+    type: "manual-save",
+  };
 }
 
 function triggerAnchorDownload(blob: Blob, fileName: string) {

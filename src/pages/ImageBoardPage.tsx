@@ -7,6 +7,7 @@ import {
   DownloadBottomSheet,
   ImageBoard,
   InfoButton,
+  InfoPopup,
   PageLogo,
   type ImageBoardDragStatus,
 } from "../components";
@@ -60,6 +61,7 @@ export function ImageBoardPage({
   });
   const {
     boardError,
+    closeManualDownload,
     closeInfo,
     colorLabel,
     currentState,
@@ -69,6 +71,7 @@ export function ImageBoardPage({
     isBoardBusy,
     isInfoOpen,
     isSavingBoard,
+    manualDownload,
     openInfo,
     reorderImages,
     removeSelectedImage,
@@ -177,7 +180,48 @@ export function ImageBoardPage({
       </section>
 
       <ColorHuntingInfoPopup onClose={closeInfo} open={isInfoOpen} />
+      <BoardManualSaveDialog manualDownload={manualDownload} onClose={closeManualDownload} />
     </main>
+  );
+}
+
+type BoardManualSaveDialogProps = {
+  manualDownload: {
+    fileName: string;
+    objectUrl: string;
+  } | null;
+  onClose: () => void;
+};
+
+function BoardManualSaveDialog({ manualDownload, onClose }: BoardManualSaveDialogProps) {
+  return (
+    <InfoPopup
+      className="image-board-manual-save-dialog"
+      closeLabel="저장 안내 닫기"
+      onClose={onClose}
+      open={manualDownload !== null}
+      title="보드 이미지 저장"
+    >
+      {manualDownload === null ? null : (
+        <div className="image-board-manual-save-content">
+          <img
+            alt="저장할 보드 이미지"
+            className="image-board-manual-save-preview"
+            src={manualDownload.objectUrl}
+          />
+          <p className="image-board-manual-save-message">이미지를 길게 눌러 저장하세요.</p>
+          <a
+            className="image-board-manual-save-link ds-pixel-corner"
+            download={manualDownload.fileName}
+            href={manualDownload.objectUrl}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            이미지 열기
+          </a>
+        </div>
+      )}
+    </InfoPopup>
   );
 }
 
