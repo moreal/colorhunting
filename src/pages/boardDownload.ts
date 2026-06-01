@@ -14,6 +14,10 @@ export async function triggerBoardDownload(
   blob: Blob,
   fileName: string,
 ): Promise<BoardDownloadResult> {
+  if (isManualSaveModeForced()) {
+    return createManualBoardDownload(blob, fileName);
+  }
+
   const shareData = createBoardFileShareData(blob, fileName);
 
   if (shareData !== null && canShareBoardFile(shareData)) {
@@ -69,7 +73,7 @@ function isLikelyAndroidWebView(userAgent: string): boolean {
 }
 
 function shouldUseManualSaveFallback(userAgent: string): boolean {
-  return isManualSaveModeForced() || isLikelyAndroidWebView(userAgent);
+  return isLikelyAndroidWebView(userAgent);
 }
 
 function isManualSaveModeForced(): boolean {

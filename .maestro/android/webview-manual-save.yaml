@@ -8,6 +8,19 @@ tags:
 - launchApp:
     clearState: false
 - openLink: ${APP_URL}
+- tapOn:
+    text: "Accept & continue"
+    optional: true
+- tapOn:
+    text: "No thanks"
+    optional: true
+- tapOn:
+    text: "Use without an account"
+    optional: true
+- tapOn:
+    text: "Got it"
+    optional: true
+- openLink: ${APP_URL}
 - assertVisible: "RED"
 - assertVisible: "DOWNLOAD"
 - tapOn: "DOWNLOAD"

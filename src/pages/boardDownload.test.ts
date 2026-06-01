@@ -121,13 +121,15 @@ describe("boardDownload", () => {
   it("e2e 수동 저장 모드에서는 브라우저 UA에서도 수동 저장용 이미지 URL을 반환한다", async () => {
     const fileName = "colorhunting-red-2026-05-24.png";
     const blob = new Blob(["board"], { type: "image/png" });
+    const { canShare, share } = mockNavigatorFileShare({ canShareResult: true });
     const { createObjectURL } = mockObjectUrl();
-    mockNavigatorFileShare({ canShareResult: false });
     mockNavigatorUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X) Chrome/126 Safari/537.36");
     window.history.replaceState(null, "", "/?e2e=1&e2eDownload=manual-save");
 
     const result = await triggerBoardDownload(blob, fileName);
 
+    expect(canShare).not.toHaveBeenCalled();
+    expect(share).not.toHaveBeenCalled();
     expect(createObjectURL).toHaveBeenCalledWith(blob);
     expect(result).toMatchObject({
       fileName,
